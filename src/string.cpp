@@ -29,6 +29,16 @@ vector<int> kmp(const string &T, const string &S) // T是文章，S是单词
     return v;
 }
 
+// 统计前缀出现次数
+{
+    for (int i = 0; i < n; ++i)
+        ans[pi[i]]++;
+    for (int i = n - 1; i > 0; --i)
+        ans[pi[i - 1]] += ans[i];
+    for (int i = 0; i <= n; ++i)
+        ans[i]++;
+}
+
 // 最小表示法
 int minrep(string s)
 {
