@@ -30,20 +30,17 @@ vector<int> kmp(const string &T, const string &S) // T是文章，S是单词
 }
 
 // 最小表示法
+int minrep(string s)
 {
-    int n;
-    cin >> n;
-    vector<int> a(n + 1);
-    for (int i = 1; i <= n; ++i)
-        cin >> a[i];
-    int i = 1, j = 1, k = 0;
-    while (i <= n && j <= n && k <= n)
+    int n = s.size();
+    int i = 0, j = 1, k = 0;
+    while (i < n && j < n && k < n)
     {
         if (i == j)
             j++;
-        if (a[(i + k - 1) % n + 1] == a[(j + k - 1) % n + 1])
+        if (s[(i + k) % n] == s[(j + k) % n])
             k++;
-        else if (a[(i + k - 1) % n + 1] > a[(j + k - 1) % n + 1])
+        else if (s[(i + k) % n] > s[(j + k) % n])
         {
             i = i + k + 1;
             k = 0;
@@ -54,5 +51,5 @@ vector<int> kmp(const string &T, const string &S) // T是文章，S是单词
             k = 0;
         }
     }
-    i = min(i, j);
+    return min(i, j);
 }
