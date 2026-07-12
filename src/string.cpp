@@ -28,3 +28,31 @@ vector<int> kmp(const string &T, const string &S) // T是文章，S是单词
             v.push_back(i - 2 * s);
     return v;
 }
+
+// 最小表示法
+{
+    int n;
+    cin >> n;
+    vector<int> a(n + 1);
+    for (int i = 1; i <= n; ++i)
+        cin >> a[i];
+    int i = 1, j = 1, k = 0;
+    while (i <= n && j <= n && k <= n)
+    {
+        if (i == j)
+            j++;
+        if (a[(i + k - 1) % n + 1] == a[(j + k - 1) % n + 1])
+            k++;
+        else if (a[(i + k - 1) % n + 1] > a[(j + k - 1) % n + 1])
+        {
+            i = i + k + 1;
+            k = 0;
+        }
+        else
+        {
+            j = j + k + 1;
+            k = 0;
+        }
+    }
+    i = min(i, j);
+}
