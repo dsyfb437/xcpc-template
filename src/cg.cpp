@@ -14,6 +14,11 @@ struct Point
     }
     Point operator-(const Point &a) const { return {x - a.x, y - a.y}; }
     ll operator^(const Point &a) const { return x * a.y - y * a.x; }
+    ll toleft(const Point &a) const
+    {
+        const auto t = (*this) ^ a;
+        return (t > 0) - (t < 0);
+    }
     double len2() const { return x * x + y * y; }
     double len() const { return sqrtl(len2()); }
 };
