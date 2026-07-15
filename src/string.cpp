@@ -40,7 +40,7 @@ vector<int> kmp(const string &T, const string &S) // T是文章，S是单词
 }
 
 // 最小表示法
-int minrep(string s)
+int minrep(const string &s)
 {
     int n = s.size();
     int i = 0, j = 1, k = 0;
@@ -65,7 +65,7 @@ int minrep(string s)
 }
 
 // exkmp
-vector<int> z_function(string s)
+vector<int> z_function(const string &s)
 {
     int n = s.size();
     vector<int> z(n);
