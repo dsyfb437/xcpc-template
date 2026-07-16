@@ -86,3 +86,56 @@ vector<int> z_function(const string &s)
     }
     return z;
 }
+
+// Trie
+const int MAXN = 3e6 + 5;
+struct trie
+{
+    int nxt[MAXN][65] = {}, cnt = 0;
+    int vis[MAXN] = {};
+
+    void clear()
+    {
+        for (int i = 0; i <= cnt; ++i)
+        {
+            for (int j = 0; j < 65; ++j)
+                nxt[i][j] = 0;
+            vis[i] = 0;
+        }
+        cnt = 0;
+    }
+    int getord(char c)
+    {
+        if (c <= 'z' && c >= 'a')
+            return c - 'a';
+        else if (c <= 'Z' && c >= 'A')
+            return c - 'A' + 26;
+        else
+            return c - '0' + 52;
+    }
+    void insert(string s)
+    {
+        int p = 0;
+        for (int i = 0; i < s.size(); ++i)
+        {
+            int c = getord(s[i]);
+            if (!nxt[p][c])
+                nxt[p][c] = ++cnt;
+            p = nxt[p][c];
+            vis[p]++;
+        }
+    }
+
+    int find(string s)
+    {
+        int p = 0;
+        for (int i = 0; i < s.size(); ++i)
+        {
+            int c = getord(s[i]);
+            if (!nxt[p][c])
+                return 0;
+            p = nxt[p][c];
+        }
+        return vis[p];
+    }
+};
