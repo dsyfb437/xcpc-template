@@ -1,5 +1,5 @@
 // exgcd
-int Exgcd(int a, int b, int &x, int &y)
+ll Exgcd(ll a, ll b, ll &x, ll &y)
 {
     if (!b)
     {
@@ -7,8 +7,8 @@ int Exgcd(int a, int b, int &x, int &y)
         y = 0;
         return a;
     }
-    int d = Exgcd(b, a % b, x, y);
-    int t = x;
+    ll d = Exgcd(b, a % b, x, y);
+    ll t = x;
     x = y;
     y = t - (a / b) * y;
     return d;
