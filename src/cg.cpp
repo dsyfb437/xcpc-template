@@ -23,27 +23,22 @@ struct Point
     double len() const { return sqrtl(len2()); }
 };
 // Andrew 求凸包
-{
-    int n;
-    cin >> n;
-    vector<Point> a(n + 1);
-    for (int i = 1; i <= n; ++i)
-        cin >> a[i].x >> a[i].y;
-    sort(a.begin() + 1, a.begin() + 1 + n);
-
-    vector<int> s;
-    s.push_back(1);
-    for (int i = 2; i <= n; ++i)
-    {
-        while (s.size() >= 2 && ((a[s.back()] - a[s[s.size() - 2]]) ^ (a[i] - a[s.back()])) <= 0)
-            s.pop_back();
-        s.push_back(i);
+vector<Point> convexHull(vector<Point> p) {
+    sort(p.begin(), p.end());
+    vector<Point> h;
+    for (auto& pt : p) {
+        while (h.size() >= 2 && 
+               ((h.back() - h[h.size()-2]) ^ (pt - h.back())) <= 0)
+            h.pop_back();
+        h.push_back(pt);
     }
-    int tmp = s.size();
-    for (int i = n - 1; i >= 1; --i)
-    {
-        while (s.size() > tmp && ((a[s.back()] - a[s[s.size() - 2]]) ^ (a[i] - a[s.back()])) <= 0)
-            s.pop_back();
-        s.push_back(i);
+    int lower = h.size();
+    for (int i = (int)p.size() - 2; i >= 0; --i) {
+        while (h.size() > lower && 
+               ((h.back() - h[h.size()-2]) ^ (p[i] - h.back())) <= 0)
+            h.pop_back();
+        h.push_back(p[i]);
     }
+    h.pop_back();
+    return h;
 }
