@@ -22,7 +22,9 @@ struct Point
     double len2() const { return x * x + y * y; }
     double len() const { return sqrtl(len2()); }
 };
+
 // Andrew 求凸包
+//O(n log n)
 vector<Point> convexHull(vector<Point> p) {
     sort(p.begin(), p.end());
     vector<Point> h;
@@ -41,4 +43,36 @@ vector<Point> convexHull(vector<Point> p) {
     }
     h.pop_back();
     return h;
+}
+
+// 最大三角形（旋转卡壳） 
+//O(n^2)
+vector<Point> maxTriangle(const vector<Point>& h) {
+    int n = h.size();
+    ll maxx = -1;
+    Point p0, p1, p2;
+    for (int i = 0; i < n; ++i) {
+        int k = (i + 2) % n;
+        for (int j = (i + 1) % n; j != i; j = (j + 1) % n) {
+            if (j == k) k = (k + 1) % n;
+            while (1) {
+                int nk = (k + 1) % n;
+                if (nk == i) break;
+                ll cur = abs((h[k] - h[i]) ^ (h[k] - h[j]));
+                ll nxt = abs((h[nk] - h[i]) ^ (h[nk] - h[j]));
+                if (nxt > cur)
+                    k = nk;
+                else
+                    break;
+            }
+            ll A = abs((h[k] - h[i]) ^ (h[k] - h[j]));
+            if (A > maxx) {
+                maxx = A;
+                p0 = h[i];
+                p1 = h[j];
+                p2 = h[k];
+            }
+        }
+    }
+    return {p0, p1, p2};
 }
