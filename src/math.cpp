@@ -1,3 +1,18 @@
+ll quickpow(ll a, ll b)
+{
+    ll res = 1;
+    a %= MOD;
+    while (b)
+    {
+        if (b & 1)
+            res = res * a % MOD;
+        a = a * a % MOD;
+        b >>= 1;
+    }
+    return res;
+}
+
+
 // exgcd
 ll Exgcd(ll a, ll b, ll &x, ll &y)
 {
@@ -59,4 +74,20 @@ vector<double> gauss(vector<vector<double>> A, vector<double> b) {
         }
     }
     return z;
+}
+
+// 拉格朗日插值：给定 n 个点 (x[i], y[i])，计算在 k 处的插值结果
+//O(n^2)
+ll lagrange_interpolation(const vector<ll>& x, const vector<ll>& y, int n, ll k) {
+    ll ans = 0;
+    for (int i = 0; i < n; ++i) {
+        ll up = 1, down = 1;
+        for (int j = 0; j < n; ++j) {
+            if (i == j) continue;
+            up = up * ((k - x[j] + MOD) % MOD) % MOD;
+            down = down * ((x[i] - x[j] + MOD) % MOD) % MOD;
+        }
+        ans = (ans + y[i] * up % MOD * quickpow(down, MOD - 2) % MOD) % MOD;
+    }
+    return ans;
 }
