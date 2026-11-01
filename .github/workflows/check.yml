@@ -82,6 +82,6 @@ jobs:
           else
             printf '按源码版本 %s 自动生成。\n' "$GITHUB_SHA" > notes.md
             gh release create "$print_tag" output/pdf/template.pdf \
-              --target "$GITHUB_SHA" --title "最新打印稿 · ${GITHUB_SHA:0:7}" \
+              --target "$GITHUB_SHA" --title "打印稿 · $(date -u +%F) · ${GITHUB_SHA:0:7}" \
               --notes-file notes.md --latest
           fi

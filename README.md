@@ -69,6 +69,10 @@ python3 print.py --check    # 编译 + 行宽检查
 - 一节多长都行，超过一页自然续页，不裁切；
 - 常用版式参数在 `book/styles.typ` 顶部：`body-size`、`code-size` 和页边距。
 
+## 来源
+
+内容参考了 [hh2048/XCPC](https://github.com/hh2048/XCPC)（GPL-3.0）的打印稿，已按本仓库结构改写；参考稿不随仓库分发。
+
 ## 依赖
 
 每个板子都是自包含的，不 `#include` 其他板子；复制走一个文件就能用。
