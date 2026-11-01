@@ -35,22 +35,22 @@ import tomllib
 import unicodedata
 
 ROOT = Path(__file__).resolve().parent
-ALG = ROOT / "板子"
+ALG = ROOT / "algorithms"
 BOOK = ROOT / "book.toml"
 OUTPUT = ROOT / "output" / "pdf" / "template.pdf"
-STYLE = ROOT / "排版" / "styles.typ"
-VENDOR = ROOT / "排版" / "vendor"
+STYLE = ROOT / "book" / "styles.typ"
+VENDOR = ROOT / "book" / "vendor"
 
 
 def use_project(root: Path, config: Path | None = None, output: Path | None = None) -> None:
     """切换项目根；默认值保持脚本所在目录的行为。"""
     global ROOT, ALG, BOOK, OUTPUT, STYLE, VENDOR
     ROOT = root.resolve()
-    ALG = ROOT / "板子"
+    ALG = ROOT / "algorithms"
     BOOK = (config if config.is_absolute() else ROOT / config).resolve() if config else ROOT / "book.toml"
     OUTPUT = (output if output.is_absolute() else ROOT / output).resolve() if output else ROOT / "output" / "pdf" / "template.pdf"
-    STYLE = ROOT / "排版" / "styles.typ"
-    VENDOR = ROOT / "排版" / "vendor"
+    STYLE = ROOT / "book" / "styles.typ"
+    VENDOR = ROOT / "book" / "vendor"
 
 
 CODE_WIDTH = 84
@@ -484,7 +484,7 @@ def render(
     ]
     written = [chapter for chapter in written if chapter.templates]
 
-    out = ['#import "/排版/styles.typ": *', "#show: book.with("]
+    out = ['#import "/book/styles.typ": *', "#show: book.with("]
     for key in ("title", "name", "short", "subtitle", "edition", "author"):
         out.append(f'  {key}: "{meta.get(key, "")}",')
     out.append("  chapters: (")
@@ -657,12 +657,12 @@ def check() -> int:
 
 
 def snapshot() -> dict[Path, float]:
-    paths = [BOOK, *ALG.rglob("*"), *ROOT.joinpath("排版").glob("*.typ"), *ROOT.joinpath("排版").glob("*.tmTheme")]
+    paths = [BOOK, *ALG.rglob("*"), *ROOT.joinpath("book").glob("*.typ"), *ROOT.joinpath("book").glob("*.tmTheme")]
     return {p: p.stat().st_mtime for p in paths if p.is_file()}
 
 
 def watch(include_all: bool = False) -> None:
-    print("监视 板子/ 和 排版/，Ctrl-C 退出。", flush=True)
+    print("监视 algorithms/ 和 book/，Ctrl-C 退出。", flush=True)
     build(include_all)
     last = snapshot()
     while True:

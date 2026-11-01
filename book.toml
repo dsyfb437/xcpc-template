@@ -7,65 +7,65 @@ author = "dsyfb437"
 duplex = false
 
 [[chapter]]
-dir = "01-基础"
+dir = "01-basics"
 title = "基础算法"
 
 [[chapter]]
-dir = "02-树"
+dir = "02-trees"
 title = "树上问题"
 
 [[chapter]]
-dir = "03-图论"
+dir = "03-graphs"
 title = "图论"
 
 [[chapter]]
-dir = "03-图论-结论"
+dir = "03-graphs-notes"
 title = "图论常见结论及例题"
 
 [[chapter]]
-dir = "04-网络流"
+dir = "04-network-flow"
 title = "网络流"
 
 [[chapter]]
-dir = "05-数论"
+dir = "05-number-theory"
 title = "数论"
 
 [[chapter]]
-dir = "05-数论-结论"
+dir = "05-number-theory-notes"
 title = "数论常见结论及例题"
 
 [[chapter]]
-dir = "06-几何"
+dir = "06-geometry"
 title = "几何"
 
 [[chapter]]
-dir = "07-多项式"
+dir = "07-polynomials"
 title = "多项式"
 
 [[chapter]]
-dir = "08-数据结构"
+dir = "08-data-structures"
 title = "数据结构"
 
 [[chapter]]
-dir = "09-动态规划"
+dir = "09-dynamic-programming"
 title = "动态规划"
 
 [[chapter]]
-dir = "10-字符串"
+dir = "10-strings"
 title = "串"
 
 [[chapter]]
-dir = "11-博弈论"
+dir = "11-game-theory"
 title = "博弈论"
 
 [[chapter]]
-dir = "12-STL与库函数"
+dir = "12-stl"
 title = "STL 与库函数"
 
 [[chapter]]
-dir = "13-卡常"
+dir = "13-optimization"
 title = "卡常"
 
 [[chapter]]
-dir = "14-杂项"
+dir = "14-misc"
 title = "杂类"

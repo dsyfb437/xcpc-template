@@ -12,7 +12,25 @@
 #include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
-#include "01-点与向量.hpp"
+struct Point {
+    ll x, y;
+
+    Point operator+(const Point &o) const { return {x + o.x, y + o.y}; }
+    Point operator-(const Point &o) const { return {x - o.x, y - o.y}; }
+    Point operator*(ll k) const { return {x * k, y * k}; }
+
+    ll operator*(const Point &o) const { return x * o.x + y * o.y; } // 点积
+    ll operator^(const Point &o) const { return x * o.y - y * o.x; } // 叉积
+
+    bool operator<(const Point &o) const { return x != o.x ? x < o.x : y < o.y; }
+    bool operator==(const Point &o) const { return x == o.x && y == o.y; }
+
+    ll norm2() const { return x * x + y * y; }
+
+    ll turn(const Point &a, const Point &b) const {
+        return (a - *this) ^ (b - *this);
+    }
+};
 
 vector<Point> convex_hull(vector<Point> p) {
     sort(p.begin(), p.end());

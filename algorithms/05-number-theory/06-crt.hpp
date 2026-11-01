@@ -9,9 +9,25 @@
  */
 #pragma once
 #include <bits/stdc++.h>
-#include "03-扩展欧几里得与逆元.hpp"
 using namespace std;
 using ll = long long;
+
+ll exgcd(ll a, ll b, ll &x, ll &y) {
+    if (b == 0) {
+        x = 1, y = 0;
+        return a;
+    }
+    ll g = exgcd(b, a % b, y, x);
+    y -= a / b * x;
+    return g;
+}
+
+ll inv_mod(ll a, ll m) {
+    ll x, y;
+    if (exgcd(a, m, x, y) != 1)
+        return -1;
+    return (x % m + m) % m;
+}
 
 inline pair<ll, ll> crt(const vector<ll> &r, const vector<ll> &m) {
     ll M = 1;

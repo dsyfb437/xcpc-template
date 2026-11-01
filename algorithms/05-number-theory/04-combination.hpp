@@ -11,9 +11,22 @@
  */
 #pragma once
 #include <bits/stdc++.h>
-#include "02-快速幂.hpp"
 using namespace std;
 using ll = long long;
+
+ll mod_pow(ll a, ll b, ll p) {
+    a %= p;
+    if (a < 0)
+        a += p;
+    ll r = 1 % p;
+    while (b) {
+        if (b & 1)
+            r = (ll)((__int128)r * a % p);
+        a = (ll)((__int128)a * a % p);
+        b >>= 1;
+    }
+    return r;
+}
 
 struct Comb {
     ll mod;
