@@ -3,7 +3,7 @@
 
 约定：
 - 一个板子一个 .hpp（或 .cpp），开头是 /** ... */ 文档块；`_` 开头的文件跳过。
-- `@brief` 是标题，`@complexity` 排在标题行右端，`@index` 单独一行。
+- `@brief` 是标题；`@complexity` 和 `@index` 一起排在标题行右端。
 - `@verified` 才印代码；没标记只印文档头（审完一个加一个）。
 - `@idea` / `@usage` / `@pitfall` 排进正文；其余行是自由说明。
 - `#include "..."` 既是编译依赖，也是出书顺序。
@@ -430,8 +430,6 @@ def field_rows(
     template: Template, deps: list[str], paragraphs: list[str]
 ) -> list[tuple[str, str, bool]]:
     rows: list[tuple[str, str, bool]] = []
-    if template.index:
-        rows.append(("下标", template.index, False))
     if deps:
         rows.append(("依赖", "、".join(deps), False))
     if template.idea:
@@ -514,10 +512,10 @@ def render(
             # 每节从新页开始：标题一定在页首，超长自然续页，不做高度估算
             if position > 0 and template.verified:
                 out.append("#pagebreak(weak: true)")
-            if template.complexity:
-                out.append(f"#cmplx[{mathify(template.complexity)}]")
-            else:
-                out.append("#cmplx(none)")
+            badge = mathify(template.complexity) if template.complexity else ""
+            if template.index:
+                badge = f"{badge} · {escape(template.index)}" if badge else escape(template.index)
+            out.append(f"#cmplx[{badge}]" if badge else "#cmplx(none)")
             out.append(f"== {escape(template.title)}")
             out.append("")
             if rows:
