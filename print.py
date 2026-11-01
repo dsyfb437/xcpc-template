@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""把 alg/ 里的板子排成打印稿。
+"""把 src/ 里的板子排成打印稿。
 
 约定：
 - 一个板子一个 .hpp（或 .cpp），开头是 /** ... */ 文档块；`_` 开头的文件跳过。
 - `@brief` 是标题，`@complexity` 排在标题行右端，`@index` 单独一行。
-- `@status` 控制是否进书：todo/learning 不印，owned/unreviewed 印。
+- `@verified` 才印代码；没标记只印文档头（审完一个加一个）。
 - `@idea` / `@usage` / `@pitfall` 排进正文；其余行是自由说明。
 - `#include "..."` 既是编译依赖，也是出书顺序。
 - 打印时剥掉 #include / #pragma once / using，除非写了 @print-boilerplate。
@@ -13,10 +13,8 @@
     python3 print.py            # 生成 output/pdf/template.pdf
     python3 print.py --watch    # 改完自动重排
     python3 print.py --check    # 只做编译与行宽检查
-    python3 print.py --status   # 看板子状态和 LC 覆盖
-    python3 print.py --all      # 连 todo/learning 一起印（复习用）
 
-换一个项目（目录里有 book.toml + alg/ + book/）：
+换一个项目（目录里有 book.toml + src/ + book/）：
     python3 print.py --root ../my-book
     python3 print.py --config other.toml --output /tmp/book.pdf
 """
@@ -35,7 +33,7 @@ import tomllib
 import unicodedata
 
 ROOT = Path(__file__).resolve().parent
-ALG = ROOT / "algorithms"
+ALG = ROOT / "src"
 BOOK = ROOT / "book.toml"
 OUTPUT = ROOT / "output" / "pdf" / "template.pdf"
 STYLE = ROOT / "book" / "styles.typ"
@@ -46,7 +44,7 @@ def use_project(root: Path, config: Path | None = None, output: Path | None = No
     """切换项目根；默认值保持脚本所在目录的行为。"""
     global ROOT, ALG, BOOK, OUTPUT, STYLE, VENDOR
     ROOT = root.resolve()
-    ALG = ROOT / "algorithms"
+    ALG = ROOT / "src"
     BOOK = (config if config.is_absolute() else ROOT / config).resolve() if config else ROOT / "book.toml"
     OUTPUT = (output if output.is_absolute() else ROOT / output).resolve() if output else ROOT / "output" / "pdf" / "template.pdf"
     STYLE = ROOT / "book" / "styles.typ"
@@ -83,6 +81,7 @@ class Template:
     index: str = ""
     index_declared: bool = False
     status: str = "unreviewed"
+    verified: bool = False
     idea: str = ""
     usage: str = ""
     pitfall: str = ""
@@ -154,6 +153,7 @@ def parse_template(path: Path) -> Template:
         index=index,
         index_declared="index" in tags,
         status=status,
+        verified="verified" in tags,
         idea=tags.get("idea", "").strip(),
         usage=tags.get("usage", "").strip(),
         pitfall=tags.get("pitfall", "").strip(),
@@ -512,7 +512,7 @@ def render(
             ]
             rows = field_rows(template, deps, paragraphs)
             # 每节从新页开始：标题一定在页首，超长自然续页，不做高度估算
-            if position > 0:
+            if position > 0 and template.verified:
                 out.append("#pagebreak(weak: true)")
             if template.complexity:
                 out.append(f"#cmplx[{mathify(template.complexity)}]")
@@ -523,7 +523,7 @@ def render(
             if rows:
                 out.append(fields_markup(rows))
                 out.append("")
-            if template.code:
+            if template.code and template.verified:
                 out.append("#code[")
                 out.append("```cpp")
                 out.extend(body)
