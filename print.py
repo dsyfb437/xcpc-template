@@ -37,19 +37,17 @@ ALG = ROOT / "src"
 BOOK = ROOT / "book.toml"
 OUTPUT = ROOT / "output" / "pdf" / "template.pdf"
 STYLE = ROOT / "book" / "styles.typ"
-VENDOR = ROOT / "book" / "vendor"
 
 
 def use_project(root: Path, config: Path | None = None, output: Path | None = None) -> None:
     """切换项目根；默认值保持脚本所在目录的行为。"""
-    global ROOT, ALG, BOOK, OUTPUT, STYLE, VENDOR
+    global ROOT, ALG, BOOK, OUTPUT, STYLE
     ROOT = root.resolve()
     ALG = ROOT / "src"
     BOOK = (config if config.is_absolute() else ROOT / config).resolve() if config else ROOT / "book.toml"
     OUTPUT = (output if output.is_absolute() else ROOT / output).resolve() if output else ROOT / "output" / "pdf" / "template.pdf"
     STYLE = ROOT / "book" / "styles.typ"
-    VENDOR = ROOT / "book" / "vendor"
-
+    
 
 CODE_WIDTH = 84
 STATUSES = ("todo", "learning", "owned", "unreviewed")
@@ -611,7 +609,7 @@ def build(include_all: bool = False) -> None:
     subprocess.run(
         [
             find_typst(), "compile", "--root", str(ROOT),
-            "--package-path", str(VENDOR), str(source), str(OUTPUT),
+            str(source), str(OUTPUT),
         ],
         check=True,
     )
