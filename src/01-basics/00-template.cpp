@@ -13,11 +13,11 @@ using ull = unsigned long long;
 using pii = pair<int, int>;
 using ld = long double;
 
+// #define MULTI_TEST
+
 #ifndef ONLINE_JUDGE
 #define LOCAL
 #endif
-
-// #define MULTI_TEST
 
 #ifdef LOCAL
 template <class... Args> void debug_out(const Args &...args) {
