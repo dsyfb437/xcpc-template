@@ -33,11 +33,7 @@ template <class... Args> void debug_out(const Args &...args) {
 #define debug(...) ((void)0)
 #endif
 
-// ---------- 板子区：要用什么就贴什么 ----------
-namespace lib {
-// struct DSU { ... };
-// struct Fenwick { ... };
-} // namespace lib
+namespace lib {} // namespace lib
 using namespace lib;
 
 void solve() {}
@@ -45,7 +41,7 @@ void solve() {}
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-    cout << fixed << setprecision(12);
+    // cout << fixed << setprecision(12);
     // freopen("in.txt", "r", stdin);
     // freopen("out.txt", "w", stdout);
 
