@@ -1,0 +1,14 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 84
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BinPackArguments: true
+BinPackParameters: true
+PointerAlignment: Right
+SortIncludes: false
+ReflowComments: false
+AlignEscapedNewlines: DontAlign
+MaxEmptyLinesToKeep: 1
