@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>name</key>
+  <string>xcpc-print</string>
+  <key>settings</key>
+  <array>
+    <dict>
+      <key>settings</key>
+      <dict>
+        <key>background</key>
+        <string>#FFFFFF</string>
+        <key>foreground</key>
+        <string>#1B2228</string>
+        <key>caret</key>
+        <string>#1B2228</string>
+        <key>selection</key>
+        <string>#E6EBEE</string>
+      </dict>
+    </dict>
+    <!-- 下面每一档都按灰度排过：Y≈33 / 58 / 91 / 112 / 136。
+         黑白打印靠明度和字重区分，彩色打印仍有冷暖差别。 -->
+    <dict>
+      <key>name</key>
+      <string>Comment</string>
+      <key>scope</key>
+      <string>comment</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#7F8B92</string>
+        <key>fontStyle</key>
+        <string>italic</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Control keyword</string>
+      <key>scope</key>
+      <string>keyword.control, keyword.other, keyword.operator.word</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#1B2228</string>
+        <key>fontStyle</key>
+        <string>bold</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Type and modifier</string>
+      <key>scope</key>
+      <string>storage.type, storage.modifier, keyword.declaration</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#4F5F6A</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Named type</string>
+      <key>scope</key>
+      <string>entity.name.type, entity.name.class, entity.name.struct, support.type, support.class</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#4F5F6A</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Function</string>
+      <key>scope</key>
+      <string>entity.name.function, support.function</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#2E3D47</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>String</string>
+      <key>scope</key>
+      <string>string</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#9A6248</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Preprocessor</string>
+      <key>scope</key>
+      <string>meta.preprocessor, keyword.control.directive</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#1B2228</string>
+        <key>fontStyle</key>
+        <string>bold</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Operator</string>
+      <key>scope</key>
+      <string>keyword.operator</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key>
+        <string>#39454E</string>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>

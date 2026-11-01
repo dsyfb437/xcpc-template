@@ -1,0 +1,71 @@
+title = "XCPC 现场赛模板册"
+name = "现场赛模板册"
+short = "XCPC 模板册"
+subtitle = "算法实现 / 接口约定 / 现场速查"
+edition = "2026.11"
+author = "dsyfb437"
+duplex = false
+
+[[chapter]]
+dir = "01-basic"
+title = "基础算法"
+
+[[chapter]]
+dir = "02-tree"
+title = "树上问题"
+
+[[chapter]]
+dir = "03-graph"
+title = "图论"
+
+[[chapter]]
+dir = "03-graph-notes"
+title = "图论常见结论及例题"
+
+[[chapter]]
+dir = "04-flow"
+title = "网络流"
+
+[[chapter]]
+dir = "05-number"
+title = "数论"
+
+[[chapter]]
+dir = "05-number-notes"
+title = "数论常见结论及例题"
+
+[[chapter]]
+dir = "06-geometry"
+title = "几何"
+
+[[chapter]]
+dir = "07-poly"
+title = "多项式"
+
+[[chapter]]
+dir = "08-ds"
+title = "数据结构"
+
+[[chapter]]
+dir = "09-dp"
+title = "动态规划"
+
+[[chapter]]
+dir = "10-string"
+title = "串"
+
+[[chapter]]
+dir = "11-game"
+title = "博弈论"
+
+[[chapter]]
+dir = "12-stl"
+title = "STL 与库函数"
+
+[[chapter]]
+dir = "13-const"
+title = "卡常"
+
+[[chapter]]
+dir = "14-misc"
+title = "杂类"

@@ -1,0 +1,87 @@
+name: 生成打印稿
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: print-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TYPST_VERSION: 0.15.1
+
+jobs:
+  build:
+    name: 生成打印稿
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: 安装 Typst
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL \
+            "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz" \
+            | tar -xJ -C "$HOME/.local/bin" --strip-components=1 typst-x86_64-unknown-linux-musl/typst
+          chmod +x "$HOME/.local/bin/typst"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: 中文字体
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk fonts-noto-cjk-extra
+
+      - name: 编译检查
+        run: python3 print.py --check
+
+      - name: 生成打印稿
+        run: python3 print.py
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: template-book
+          path: output/pdf/template.pdf
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: 更新下载入口
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: template-book
+          path: output/pdf
+      - name: 发布最新打印稿
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          current_sha=$(gh api "repos/$GH_REPO/commits/main" --jq '.sha')
+          if [ "$current_sha" != "$GITHUB_SHA" ]; then
+            echo "已有更新的源码，保留最新版本的发布流程。"
+            exit 0
+          fi
+          print_tag="print-${GITHUB_SHA:0:12}"
+          if gh release view "$print_tag" >/dev/null 2>&1; then
+            gh release upload "$print_tag" output/pdf/template.pdf --clobber
+          else
+            printf '按源码版本 %s 自动生成。\n' "$GITHUB_SHA" > notes.md
+            gh release create "$print_tag" output/pdf/template.pdf \
+              --target "$GITHUB_SHA" --title "最新打印稿 · ${GITHUB_SHA:0:7}" \
+              --notes-file notes.md --latest
+          fi

@@ -1,0 +1,11 @@
+/build/
+/output/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+*.o
+*.exe
+third_party/
+build/lc/
+reference/
