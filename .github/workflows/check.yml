@@ -21,8 +21,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
@@ -46,7 +46,7 @@ jobs:
       - name: 生成打印稿
         run: python3 print.py
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         with:
           name: template-book
           path: output/pdf/template.pdf
@@ -62,7 +62,7 @@ jobs:
       contents: write
       actions: read
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v4
         with:
           name: template-book
           path: output/pdf
