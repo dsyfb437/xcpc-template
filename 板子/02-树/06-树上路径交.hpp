@@ -13,7 +13,7 @@
  *   auto [len, x, y] = path_intersection(lca, a, b, c, d); */
 #pragma once
 #include <bits/stdc++.h>
-#include "lca.hpp"
+#include "03-最近公共祖先.hpp"
 using namespace std;
 
 inline tuple<int, int, int> path_intersection(const LCA &lca, int a, int b, int c,

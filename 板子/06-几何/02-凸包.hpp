@@ -12,7 +12,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
-#include "../06-geometry/point.hpp"
+#include "01-点与向量.hpp"
 
 vector<Point> convex_hull(vector<Point> p) {
     sort(p.begin(), p.end());

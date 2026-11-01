@@ -11,7 +11,7 @@
  */
 #pragma once
 #include <bits/stdc++.h>
-#include "mod_pow.hpp"
+#include "02-快速幂.hpp"
 using namespace std;
 using ll = long long;
 

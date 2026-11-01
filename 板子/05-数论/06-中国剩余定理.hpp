@@ -9,7 +9,7 @@
  */
 #pragma once
 #include <bits/stdc++.h>
-#include "exgcd.hpp"
+#include "03-扩展欧几里得与逆元.hpp"
 using namespace std;
 using ll = long long;
 

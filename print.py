@@ -35,22 +35,22 @@ import tomllib
 import unicodedata
 
 ROOT = Path(__file__).resolve().parent
-ALG = ROOT / "alg"
+ALG = ROOT / "板子"
 BOOK = ROOT / "book.toml"
 OUTPUT = ROOT / "output" / "pdf" / "template.pdf"
-STYLE = ROOT / "book" / "styles.typ"
-VENDOR = ROOT / "book" / "vendor"
+STYLE = ROOT / "排版" / "styles.typ"
+VENDOR = ROOT / "排版" / "vendor"
 
 
 def use_project(root: Path, config: Path | None = None, output: Path | None = None) -> None:
     """切换项目根；默认值保持脚本所在目录的行为。"""
     global ROOT, ALG, BOOK, OUTPUT, STYLE, VENDOR
     ROOT = root.resolve()
-    ALG = ROOT / "alg"
+    ALG = ROOT / "板子"
     BOOK = (config if config.is_absolute() else ROOT / config).resolve() if config else ROOT / "book.toml"
     OUTPUT = (output if output.is_absolute() else ROOT / output).resolve() if output else ROOT / "output" / "pdf" / "template.pdf"
-    STYLE = ROOT / "book" / "styles.typ"
-    VENDOR = ROOT / "book" / "vendor"
+    STYLE = ROOT / "排版" / "styles.typ"
+    VENDOR = ROOT / "排版" / "vendor"
 
 
 CODE_WIDTH = 84
@@ -484,7 +484,7 @@ def render(
     ]
     written = [chapter for chapter in written if chapter.templates]
 
-    out = ['#import "/book/styles.typ": *', "#show: book.with("]
+    out = ['#import "/排版/styles.typ": *', "#show: book.with("]
     for key in ("title", "name", "short", "subtitle", "edition", "author"):
         out.append(f'  {key}: "{meta.get(key, "")}",')
     out.append("  chapters: (")
@@ -500,7 +500,7 @@ def render(
         out.append("#pagebreak(weak: true)")
         out.append(f"= {escape(chapter.title)}")
         out.append("")
-        for template in chapter.templates:
+        for position, template in enumerate(chapter.templates):
             body: list[str] = []
             for line in template.code:
                 body.extend(wrap_line(line))
@@ -511,18 +511,9 @@ def render(
                 if dep in index and shown(index[dep])
             ]
             rows = field_rows(template, deps, paragraphs)
-            field_lines = 0
-            for label, value, _ in rows:
-                width = display_width(label) + 6 + display_width(value.replace("\n", " "))
-                field_lines += max(1, (width + 88) // 92)
-            # 估算高度（mm）：代码每行约 3.15，字段每行约 5.4，标题约 12
-            fits = len(body) * 3.15 + field_lines * 5.4 + 12 <= 246
-            if fits:
-                out.append("#block(breakable: false)[")
-            else:
-                # 长板先翻页，至少保证「标题 + 说明」从页首开始
+            # 每节从新页开始：标题一定在页首，超长自然续页，不做高度估算
+            if position > 0:
                 out.append("#pagebreak(weak: true)")
-                out.append("#block(breakable: false)[")
             if template.complexity:
                 out.append(f"#cmplx[{mathify(template.complexity)}]")
             else:
@@ -532,8 +523,6 @@ def render(
             if rows:
                 out.append(fields_markup(rows))
                 out.append("")
-            if not fits:
-                out.append("]")
             if template.code:
                 out.append("#code[")
                 out.append("```cpp")
@@ -541,8 +530,6 @@ def render(
                 out.append("```")
                 out.append("]")
                 out.append("")
-            if fits:
-                out.append("]")
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -640,7 +627,7 @@ def build(include_all: bool = False) -> None:
     except ValueError:
         out_label = OUTPUT
     print(
-        f"{out_label}：{written_chapters} 章 / {written} 个板子（已掌握 {owned}）",
+        f"{out_label}：{written_chapters} 章 / {written} 个板子",
         flush=True,
     )
 
@@ -670,12 +657,12 @@ def check() -> int:
 
 
 def snapshot() -> dict[Path, float]:
-    paths = [BOOK, *ALG.rglob("*"), *ROOT.joinpath("book").glob("*.typ"), *ROOT.joinpath("book").glob("*.tmTheme")]
+    paths = [BOOK, *ALG.rglob("*"), *ROOT.joinpath("排版").glob("*.typ"), *ROOT.joinpath("排版").glob("*.tmTheme")]
     return {p: p.stat().st_mtime for p in paths if p.is_file()}
 
 
 def watch(include_all: bool = False) -> None:
-    print("监视 alg/ 和 book/，Ctrl-C 退出。", flush=True)
+    print("监视 板子/ 和 排版/，Ctrl-C 退出。", flush=True)
     build(include_all)
     last = snapshot()
     while True:
@@ -694,7 +681,6 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="alg/ → PDF")
     parser.add_argument("--watch", action="store_true", help="改完自动重排")
     parser.add_argument("--check", action="store_true", help="只做编译和行宽检查")
-    parser.add_argument("--status", action="store_true", help="看板子状态和 LC 测试覆盖")
     parser.add_argument("--all", action="store_true", help="连 todo/learning 一起排（复习用）")
     parser.add_argument("--root", help="项目根目录（默认：脚本所在目录）")
     parser.add_argument("--config", help="book.toml 路径（相对 --root）")
@@ -706,8 +692,6 @@ def main() -> None:
     output = Path(args.output) if args.output else None
     use_project(root, config, output)
 
-    if args.status:
-        raise SystemExit(status_report())
     if args.check:
         raise SystemExit(check())
     if args.watch:

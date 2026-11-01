@@ -91,7 +91,7 @@
   set text(font: sans-font, size: body-size, fill: text-ink, lang: "zh", region: "cn")
   set par(justify: false, leading: 0.55em, spacing: 0.65em)
   set heading(numbering: "1.1")
-  set raw(theme: "/book/theme.tmTheme", tab-size: 4)
+  set raw(theme: "/排版/theme.tmTheme", tab-size: 4)
 
   show raw: it => {
     set text(font: mono-font, size: code-size)

@@ -14,7 +14,7 @@
  *   vector<char> ans = sat.solve(); */
 #pragma once
 #include <bits/stdc++.h>
-#include "tarjan_scc.hpp"
+#include "02-强连通分量.hpp"
 using namespace std;
 
 struct TwoSAT {
