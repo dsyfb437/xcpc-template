@@ -361,7 +361,7 @@ def inline_soft(text: str) -> str:
                 else:
                     out.append(
                         f"#highlight(fill: accent-soft, stroke: 0.15pt + code-rule, radius: 1pt, extent: 1.2pt)"
-                        f"[#text(font: mono-font, size: 0.94em)[{escape(inner)}]]"
+                        f"[#text({json.dumps(inner, ensure_ascii=False)}, font: mono-font, size: 0.94em)]"
                     )
                 index = close + 1
                 continue
