@@ -1,22 +1,13 @@
 #!/usr/bin/env python3
-"""把 src/ 里的板子排成打印稿。
+"""把 src/ 里的板子排成 A4 打印稿。
 
-约定：
-- 一个板子一个 .hpp（或 .cpp），开头是 /** ... */ 文档块；`_` 开头的文件跳过。
-- `@brief` 是标题；`@complexity` 和 `@index` 一起排在标题行右端。
-- `@verified` 才印代码；没标记只印文档头（审完一个加一个）。
-- `@idea` / `@usage` / `@pitfall` 排进正文；其余行是自由说明。
-- `#include "..."` 既是编译依赖，也是出书顺序。
-- 打印时剥掉 #include / #pragma once / using，除非写了 @print-boilerplate。
+文档块写在每个 .hpp 开头，`@verified` 控制是否印代码。
+print.py 扫描 src/、按 book.toml 的章节生成 build/book.typ，再调用 Typst。
 
 用法：
     python3 print.py            # 生成 output/pdf/template.pdf
     python3 print.py --watch    # 改完自动重排
-    python3 print.py --check    # 只做编译与行宽检查
-
-换一个项目（目录里有 book.toml + src/ + book/）：
-    python3 print.py --root ../my-book
-    python3 print.py --config other.toml --output /tmp/book.pdf
+    python3 print.py --check    # 编译 + 行宽检查
 """
 from __future__ import annotations
 
@@ -36,24 +27,12 @@ ROOT = Path(__file__).resolve().parent
 ALG = ROOT / "src"
 BOOK = ROOT / "book.toml"
 OUTPUT = ROOT / "output" / "pdf" / "template.pdf"
-STYLE = ROOT / "book" / "styles.typ"
 
-
-def use_project(root: Path, config: Path | None = None, output: Path | None = None) -> None:
-    """切换项目根；默认值保持脚本所在目录的行为。"""
-    global ROOT, ALG, BOOK, OUTPUT, STYLE
-    ROOT = root.resolve()
-    ALG = ROOT / "src"
-    BOOK = (config if config.is_absolute() else ROOT / config).resolve() if config else ROOT / "book.toml"
-    OUTPUT = (output if output.is_absolute() else ROOT / output).resolve() if output else ROOT / "output" / "pdf" / "template.pdf"
-    STYLE = ROOT / "book" / "styles.typ"
-    
 
 CODE_WIDTH = 84
 
 _DOC = re.compile(r"\A\ufeff?\s*/\*\*(?P<body>.*?)\*/\s*", re.S)
 _TAG = re.compile(r"^@([\w-]+)\s*(.*)$")
-_INCLUDE = re.compile(r'^\s*#\s*include\s+"([^"]+)"')
 _BOILERPLATE = re.compile(
     r"^\s*(#\s*pragma\s+once\b.*|#\s*include\b.*|using\s+namespace\s+std\s*;"
     r"|using\s+ll\s*=\s*long\s+long\s*;)\s*$"
@@ -67,14 +46,12 @@ class Template:
     title: str
     complexity: str = ""
     index: str = ""
-    index_declared: bool = False
     verified: bool = False
     idea: str = ""
     usage: str = ""
     pitfall: str = ""
     notes: list[str] = field(default_factory=list)
     code: list[str] = field(default_factory=list)
-    deps: list[Path] = field(default_factory=list)
 
 
 @dataclass
@@ -124,11 +101,7 @@ def parse_template(path: Path) -> Template:
             last_tag = None
 
     body = text[match.end():].splitlines()
-    deps = []
-    for line in body:
-        found = _INCLUDE.match(line)
-        if found:
-            deps.append((path.parent / found.group(1)).resolve())
+
 
     keep = "print-boilerplate" in tags
     code = body if keep else [line for line in body if not _BOILERPLATE.match(line)]
@@ -144,43 +117,17 @@ def parse_template(path: Path) -> Template:
         title=tags.get("brief") or path.stem,
         complexity=complexity,
         index=index,
-        index_declared="index" in tags,
         verified="verified" in tags,
         idea=tags.get("idea", "").strip(),
         usage=tags.get("usage", "").strip(),
         pitfall=tags.get("pitfall", "").strip(),
         notes=trim(notes),
         code=trim(code),
-        deps=deps,
     )
-
-
-def order(templates: list[Template], index: dict[Path, Template]) -> list[Template]:
-    ordered: list[Template] = []
-    state: dict[Path, int] = {}
-
-    def visit(template: Template) -> None:
-        mark = state.get(template.path, 0)
-        if mark == 2:
-            return
-        if mark == 1:
-            raise ValueError(f"循环依赖：{template.path.name}")
-        state[template.path] = 1
-        for dep in template.deps:
-            neighbor = index.get(dep)
-            if neighbor and neighbor.path.parent == template.path.parent:
-                visit(neighbor)
-        state[template.path] = 2
-        ordered.append(template)
-
-    for template in sorted(templates, key=lambda item: item.path.name):
-        visit(template)
-    return ordered
 
 
 def load_book() -> tuple[dict, list[Chapter]]:
     meta = tomllib.loads(BOOK.read_text(encoding="utf-8"))
-    index: dict[Path, Template] = {}
     chapters: list[Chapter] = []
     for entry in meta.get("chapter", []):
         directory = ALG / entry["dir"]
@@ -191,8 +138,7 @@ def load_book() -> tuple[dict, list[Chapter]]:
                     continue
                 template = parse_template(path)
                 templates.append(template)
-                index[template.path] = template
-        chapters.append(Chapter(entry["title"], order(templates, index)))
+        chapters.append(Chapter(entry["title"], templates))
     return meta, chapters
 
 
@@ -312,30 +258,6 @@ def escape(text: str) -> str:
     return "".join(out)
 
 
-def inline(text: str) -> str:
-    out: list[str] = []
-    buffer: list[str] = []
-    index = 0
-    while index < len(text):
-        ch = text[index]
-        if ch in "$`":
-            close = text.find(ch, index + 1)
-            if close > index:
-                if buffer:
-                    out.append(escape("".join(buffer)))
-                    buffer = []
-                inner = text[index + 1 : close]
-                out.append(f"${inner}$" if ch == "$" else f"`{inner}`")
-                index = close + 1
-                continue
-        buffer.append(ch)
-        index += 1
-    if buffer:
-        out.append(escape("".join(buffer)))
-    return "".join(out)
-
-
-
 def inline_soft(text: str) -> str:
     """行内代码用可断行的等宽文本，避免整段 raw 把换行顶到奇怪的位置。"""
     out: list[str] = []
@@ -398,7 +320,7 @@ def mathify(text: str) -> str:
     return "".join(out)
 
 
-LABELS = ("用途：", "做法：", "用法：", "例：", "坑：", "依赖：", "注意：", "编译运行：", "管道：")
+LABELS = ("用途：", "做法：", "用法：", "例：", "坑：", "注意：", "编译运行：", "管道：")
 
 
 def starts_section(line: str) -> bool:
@@ -449,12 +371,8 @@ def codeish(text: str) -> bool:
     return any(ch in s for ch in ";{}") or s.startswith(("#", "//", "auto ", "if ", "for "))
 
 
-def field_rows(
-    template: Template, deps: list[str], paragraphs: list[str]
-) -> list[tuple[str, str, bool]]:
+def field_rows(template: Template, paragraphs: list[str]) -> list[tuple[str, str, bool]]:
     rows: list[tuple[str, str, bool]] = []
-    if deps:
-        rows.append(("依赖", "、".join(deps), False))
     if template.idea:
         rows.append(("核心", template.idea, False))
     if template.usage:
@@ -493,7 +411,6 @@ def fields_markup(rows: list[tuple[str, str, bool]]) -> str:
 def render(
     meta: dict,
     chapters: list[Chapter],
-    index: dict[Path, Template],
 ) -> str:
     written = [chapter for chapter in chapters if chapter.templates]
 
@@ -518,12 +435,7 @@ def render(
             for line in template.code:
                 body.extend(wrap_line(line))
             paragraphs = join_notes(template.notes)
-            deps = [
-                index[dep].title
-                for dep in template.deps
-                if dep in index
-            ]
-            rows = field_rows(template, deps, paragraphs)
+            rows = field_rows(template, paragraphs)
             # 每节从新页开始：标题一定在页首，超长自然续页，不做高度估算
             if position > 0 and template.verified:
                 out.append("#pagebreak(weak: true)")
@@ -564,7 +476,7 @@ def build() -> None:
     source.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     index = {t.path: t for c in chapters for t in c.templates}
-    source.write_text(render(meta, chapters, index), encoding="utf-8")
+    source.write_text(render(meta, chapters), encoding="utf-8")
     subprocess.run(
         [
             find_typst(), "compile", "--root", str(ROOT),
@@ -633,15 +545,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="src/ → PDF")
     parser.add_argument("--watch", action="store_true", help="改完自动重排")
     parser.add_argument("--check", action="store_true", help="只做编译和行宽检查")
-    parser.add_argument("--root", help="项目根目录（默认：脚本所在目录）")
-    parser.add_argument("--config", help="book.toml 路径（相对 --root）")
-    parser.add_argument("--output", help="输出 PDF 路径（相对 --root）")
     args = parser.parse_args()
-
-    root = Path(args.root) if args.root else Path(__file__).resolve().parent
-    config = Path(args.config) if args.config else None
-    output = Path(args.output) if args.output else None
-    use_project(root, config, output)
 
     if args.check:
         raise SystemExit(check())
