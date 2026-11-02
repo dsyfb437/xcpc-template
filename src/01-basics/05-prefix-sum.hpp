@@ -7,8 +7,10 @@
  * 差分：diff[0] = a[0]，diff[i] = a[i] - a[i-1]；区间加 v 只要 diff[l] += v、
  * diff[r+1] -= v，再前缀和还原。
  * 例：
- *   auto pre = prefix_sum(a);
- *   ll s = pre[r + 1] - pre[l];
+ *   `auto pre = prefix_sum(a);`
+ *   `ll s = pre[r + 1] - pre[l];`
+ * 
+ * @verified
  */
 #pragma once
 #include <bits/stdc++.h>
