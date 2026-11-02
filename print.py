@@ -412,7 +412,11 @@ def render(
     meta: dict,
     chapters: list[Chapter],
 ) -> str:
-    written = [chapter for chapter in chapters if chapter.templates]
+    written = [
+        Chapter(chapter.title, [t for t in chapter.templates if t.verified])
+        for chapter in chapters
+    ]
+    written = [chapter for chapter in written if chapter.templates]
 
     out = ['#import "/book/styles.typ": *', "#show: book.with("]
     for key in ("title", "name", "short", "subtitle", "edition", "author"):
@@ -437,7 +441,7 @@ def render(
             paragraphs = join_notes(template.notes)
             rows = field_rows(template, paragraphs)
             # 每节从新页开始：标题一定在页首，超长自然续页，不做高度估算
-            if position > 0 and template.verified:
+            if position > 0:
                 out.append("#pagebreak(weak: true)")
             badge = mathify(template.complexity) if template.complexity else ""
             if template.index:
@@ -448,7 +452,7 @@ def render(
             if rows:
                 out.append(fields_markup(rows))
                 out.append("")
-            if template.code and template.verified:
+            if template.code:
                 out.append("#code[")
                 out.append("```cpp")
                 out.extend(body)
@@ -484,14 +488,14 @@ def build() -> None:
         ],
         check=True,
     )
-    written_chapters = sum(1 for c in chapters if c.templates)
-    written = sum(len(c.templates) for c in chapters)
+    written_chapters = sum(1 for c in chapters if any(t.verified for t in c.templates))
+    written = sum(1 for c in chapters for t in c.templates if t.verified)
     try:
         out_label = OUTPUT.relative_to(ROOT)
     except ValueError:
         out_label = OUTPUT
     print(
-        f"{out_label}：{written_chapters} 章 / {written} 个板子",
+        f"{out_label}：{written_chapters} 章 / {written} 个已验证板子",
         flush=True,
     )
 
