@@ -3,9 +3,10 @@
  * @complexity O(n log n)
  * @index 数组 0-based
  *
- * 返回逆序对数（i < j 且 a[i] > a[j] 的对数）。
- * 例：
- *   ll inv = count_inversions(a);
+ * @idea 返回逆序对数（i < j 且 a[i] > a[j] 的对数）。
+ * @usage 例：`ll inv = count_inversions(a);`
+ * 
+ * @verified
  */
 #pragma once
 #include <bits/stdc++.h>
