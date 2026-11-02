@@ -1,13 +1,11 @@
 /**
  * @brief 三分
- * @complexity O(log n · f)
- *
- * 用途：单峰函数求最大值，f 先增后减。求最小值就把比较反过来。
- * 整数版最后剩 3 个点暴力扫；实数版迭代 100 次。
- * 坑：函数有平台（连续相等）时三分可能失效，用之前先确认严格单峰。
- *
- * 例：
- *   ll pos = ternary_max(0, n, [&](ll x) { return f(x); }); */
+ * @complexity O(log n · f) 或者 O(100 · f)
+ * @idea 单峰函数求最大值，f 先增后减。求最小值就把比较反过来。整数版最后剩 3 个点暴力扫；实数版迭代 100 次。
+ * @usage 例：`ll pos = ternary_max(0, n, [&](ll x) { return f(x); });`
+ * @pitfall 函数有平台（连续相等）时三分可能失效，用之前先确认严格单峰。
+ * @verified
+ */
 #pragma once
 #include <bits/stdc++.h>
 using namespace std;
@@ -41,5 +39,5 @@ template <class F> ld ternary_max_real(ld lo, ld hi, F f) {
         else
             hi = m2;
     }
-    return (lo + hi) / 2;
+    return midpoint(lo, hi);
 }
