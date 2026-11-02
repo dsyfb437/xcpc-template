@@ -359,7 +359,10 @@ def inline_soft(text: str) -> str:
                 if ch == "$":
                     out.append(f"${inner}$")
                 else:
-                    out.append(f"#text(font: mono-font, size: 0.94em)[{escape(inner)}]")
+                    out.append(
+                        f"#highlight(fill: accent-soft, stroke: 0.15pt + code-rule, radius: 1pt, extent: 1.2pt)"
+                        f"[#text(font: mono-font, size: 0.94em)[{escape(inner)}]]"
+                    )
                 index = close + 1
                 continue
         buffer.append(ch)
