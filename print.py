@@ -50,20 +50,10 @@ def use_project(root: Path, config: Path | None = None, output: Path | None = No
     
 
 CODE_WIDTH = 84
-STATUSES = ("todo", "learning", "owned", "unreviewed")
-STATUS_LABELS = {
-    "todo": "待写",
-    "learning": "学习中",
-    "owned": "已掌握",
-    "unreviewed": "未标注",
-}
-PRINTED_STATUSES = {"owned", "unreviewed"}
 
 _DOC = re.compile(r"\A\ufeff?\s*/\*\*(?P<body>.*?)\*/\s*", re.S)
 _TAG = re.compile(r"^@([\w-]+)\s*(.*)$")
 _INCLUDE = re.compile(r'^\s*#\s*include\s+"([^"]+)"')
-_INCLUDE_ANY = re.compile(r'#\s*include\s+"([^"]+)"')
-_PROBLEM = re.compile(r'^\s*#define\s+PROBLEM\s+"([^"]+)"', re.M)
 _BOILERPLATE = re.compile(
     r"^\s*(#\s*pragma\s+once\b.*|#\s*include\b.*|using\s+namespace\s+std\s*;"
     r"|using\s+ll\s*=\s*long\s+long\s*;)\s*$"
@@ -78,7 +68,6 @@ class Template:
     complexity: str = ""
     index: str = ""
     index_declared: bool = False
-    status: str = "unreviewed"
     verified: bool = False
     idea: str = ""
     usage: str = ""
@@ -149,11 +138,6 @@ def parse_template(path: Path) -> Template:
     index = tags.get("index", "").strip()
     if index in {"-", "—", "–"}:
         index = ""
-    status = tags.get("status", "unreviewed").strip().lower()
-    if status not in STATUSES:
-        raise ValueError(
-            f"{path.relative_to(ROOT)} 的 @status 只能是 {'/'.join(STATUSES)}，现在是 {status!r}"
-        )
 
     return Template(
         path=path.resolve(),
@@ -161,7 +145,6 @@ def parse_template(path: Path) -> Template:
         complexity=complexity,
         index=index,
         index_declared="index" in tags,
-        status=status,
         verified="verified" in tags,
         idea=tags.get("idea", "").strip(),
         usage=tags.get("usage", "").strip(),
@@ -511,16 +494,8 @@ def render(
     meta: dict,
     chapters: list[Chapter],
     index: dict[Path, Template],
-    include_all: bool = False,
 ) -> str:
-    def shown(template: Template) -> bool:
-        return include_all or template.status in PRINTED_STATUSES
-
-    written = [
-        Chapter(chapter.title, [t for t in chapter.templates if shown(t)])
-        for chapter in chapters
-    ]
-    written = [chapter for chapter in written if chapter.templates]
+    written = [chapter for chapter in chapters if chapter.templates]
 
     out = ['#import "/book/styles.typ": *', "#show: book.with("]
     for key in ("title", "name", "short", "subtitle", "edition", "author"):
@@ -546,7 +521,7 @@ def render(
             deps = [
                 index[dep].title
                 for dep in template.deps
-                if dep in index and shown(index[dep])
+                if dep in index
             ]
             rows = field_rows(template, deps, paragraphs)
             # 每节从新页开始：标题一定在页首，超长自然续页，不做高度估算
@@ -583,71 +558,13 @@ def find_typst() -> str:
     sys.exit("找不到 typst：装一个（单文件二进制），或看 README。")
 
 
-def tested_boards() -> set[Path]:
-    found: set[Path] = set()
-    directory = ROOT / "verify"
-    if not directory.is_dir():
-        return found
-    for path in directory.rglob("*.test.cpp"):
-        text = path.read_text(encoding="utf-8")
-        problem = _PROBLEM.search(text)
-        if not problem or problem.group(1).strip() == "TODO":
-            continue
-        for include in _INCLUDE_ANY.findall(text):
-            target = (path.parent / include).resolve()
-            if target.is_file():
-                found.add(target)
-    return found
-
-
-def pad(text: str, width: int) -> str:
-    return text + " " * max(0, width - display_width(text))
-
-
-def status_report() -> int:
-    meta, chapters = load_book()
-    tested = tested_boards()
-    print(f"{pad('章', 16)}{pad('板子', 32)}{pad('状态', 8)}{pad('测试', 6)}行数")
-    print("-" * 72)
-    counts = {status: 0 for status in STATUSES}
-    total = 0
-    empty: list[str] = []
-    no_index: list[str] = []
-    for chapter in chapters:
-        if not chapter.templates:
-            empty.append(chapter.title)
-            continue
-        for template in chapter.templates:
-            counts[template.status] += 1
-            total += 1
-            relative = template.path.relative_to(ROOT)
-            name = relative.parts[1] if len(relative.parts) > 2 else relative.parts[0]
-            test = "✓" if template.path in tested else "-"
-            print(
-                f"{pad(name, 16)}{pad(template.title, 32)}"
-                f"{pad(STATUS_LABELS[template.status], 8)}{pad(test, 6)}{len(template.code)}"
-            )
-            if not template.index_declared:
-                no_index.append(template.title)
-    print("-" * 72)
-    summary = "、".join(f"{STATUS_LABELS[status]} {counts[status]}" for status in STATUSES)
-    print(f"合计 {total} 个板子：{summary}")
-    print(f"有 LC 测试：{sum(1 for c in chapters for t in c.templates if t.path in tested)} 个")
-    if empty:
-        print("空章（book.toml 里有、alg/ 里没有板子）：" + "、".join(empty))
-    if no_index:
-        print(f"缺 @index：{len(no_index)} 个（{'、'.join(no_index[:8])}{'…' if len(no_index) > 8 else ''}）")
-    print("提示：默认只排「已掌握 + 未标注」；--all 把 todo/learning 也排出来复习。")
-    return 0
-
-
-def build(include_all: bool = False) -> None:
+def build() -> None:
     meta, chapters = load_book()
     source = ROOT / "build" / "book.typ"
     source.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     index = {t.path: t for c in chapters for t in c.templates}
-    source.write_text(render(meta, chapters, index, include_all), encoding="utf-8")
+    source.write_text(render(meta, chapters, index), encoding="utf-8")
     subprocess.run(
         [
             find_typst(), "compile", "--root", str(ROOT),
@@ -655,11 +572,8 @@ def build(include_all: bool = False) -> None:
         ],
         check=True,
     )
-    written_chapters = sum(
-        1 for c in chapters if any(include_all or t.status in PRINTED_STATUSES for t in c.templates)
-    )
-    written = sum(1 for c in chapters for t in c.templates if include_all or t.status in PRINTED_STATUSES)
-    owned = sum(1 for c in chapters for t in c.templates if t.status == "owned")
+    written_chapters = sum(1 for c in chapters if c.templates)
+    written = sum(len(c.templates) for c in chapters)
     try:
         out_label = OUTPUT.relative_to(ROOT)
     except ValueError:
@@ -699,9 +613,9 @@ def snapshot() -> dict[Path, float]:
     return {p: p.stat().st_mtime for p in paths if p.is_file()}
 
 
-def watch(include_all: bool = False) -> None:
+def watch() -> None:
     print("监视 algorithms/ 和 book/，Ctrl-C 退出。", flush=True)
-    build(include_all)
+    build()
     last = snapshot()
     while True:
         time.sleep(0.6)
@@ -710,16 +624,15 @@ def watch(include_all: bool = False) -> None:
             continue
         last = current
         try:
-            build(include_all)
+            build()
         except subprocess.CalledProcessError:
             print("编译没过，等下一次改动。", flush=True)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="alg/ → PDF")
+    parser = argparse.ArgumentParser(description="src/ → PDF")
     parser.add_argument("--watch", action="store_true", help="改完自动重排")
     parser.add_argument("--check", action="store_true", help="只做编译和行宽检查")
-    parser.add_argument("--all", action="store_true", help="连 todo/learning 一起排（复习用）")
     parser.add_argument("--root", help="项目根目录（默认：脚本所在目录）")
     parser.add_argument("--config", help="book.toml 路径（相对 --root）")
     parser.add_argument("--output", help="输出 PDF 路径（相对 --root）")
@@ -734,11 +647,11 @@ def main() -> None:
         raise SystemExit(check())
     if args.watch:
         try:
-            watch(args.all)
+            watch()
         except KeyboardInterrupt:
             pass
     else:
-        build(args.all)
+        build()
 
 
 if __name__ == "__main__":
