@@ -113,15 +113,26 @@ def parse_template(path: Path) -> Template:
 
     tags: dict[str, str] = {}
     notes: list[str] = []
+    last_tag: str | None = None
     for raw in match.group("body").splitlines():
-        line = raw.strip().removeprefix("*").strip()
+        content = raw.strip().removeprefix("*")
+        indent = len(content) - len(content.lstrip(" "))
+        line = content.strip()
         tag = _TAG.match(line)
         if tag:
-            tags[tag.group(1)] = tag.group(2).strip()
+            key = tag.group(1)
+            value = tag.group(2).strip()
+            tags[key] = value if key not in tags else tags[key] + "\n" + value
+            last_tag = key
+        elif line and last_tag is not None and indent >= 2:
+            # 缩进续行：并进上一个标签，渲染时保留换行
+            tags[last_tag] += ("\n" if tags[last_tag] else "") + line
         elif line:
             notes.append(line.rstrip())
+            last_tag = None
         elif notes and notes[-1] != "":
             notes.append("")
+            last_tag = None
 
     body = text[match.end():].splitlines()
     deps = []
@@ -491,7 +502,7 @@ def fields_markup(rows: list[tuple[str, str, bool]]) -> str:
             value = body.replace("`", "")
             content = f"example({json.dumps(value, ensure_ascii=False)})"
         else:
-            content = f"[{inline_soft(body).replace(chr(10), ' ')}]"
+            content = f"[{inline_soft(body).replace(chr(10), ' #linebreak() ')}]"
         parts.append(f'    ("{label}", {content}),')
     return "#fields((\n" + "\n".join(parts) + "\n))"
 
