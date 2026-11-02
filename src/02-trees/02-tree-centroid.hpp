@@ -3,13 +3,12 @@
  * @complexity O(n)
  * @index 点 1-based
  *
- * 用途：求树的重心——删掉它以后，最大连通块最小的点。一般 1 个，最多 2 个。
- * 做法：DFS 求子树大小；若每个儿子子树和补集都 ≤ n/2，该点就是重心。
- * 递归实现；深链本地测试前先 `ulimit -s unlimited`。
- * 坑：g 必须连通；返回 1-indexed 的点，按编号升序。
+ * @idea 求树的重心。
+ *       DFS 求子树大小；若每个儿子子树和补集都 ≤ n/2，该点就是重心。
+ * @usage 例：`vector<int> c = tree_centroids(g);  // 1 个或 2 个`
+ * @pitfall g 必须连通；返回 1-indexed 的点，按编号升序。
  *
- * 例：
- *   vector<int> c = tree_centroids(g);  // 1 个或 2 个
+ * @verified
  */
 #pragma once
 #include <bits/stdc++.h>
