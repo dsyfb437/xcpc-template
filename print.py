@@ -341,6 +341,34 @@ def inline(text: str) -> str:
     return "".join(out)
 
 
+
+def inline_soft(text: str) -> str:
+    """行内代码用可断行的等宽文本，避免整段 raw 把换行顶到奇怪的位置。"""
+    out: list[str] = []
+    buffer: list[str] = []
+    index = 0
+    while index < len(text):
+        ch = text[index]
+        if ch in "$`":
+            close = text.find(ch, index + 1)
+            if close > index:
+                if buffer:
+                    out.append(escape("".join(buffer)))
+                    buffer = []
+                inner = text[index + 1 : close]
+                if ch == "$":
+                    out.append(f"${inner}$")
+                else:
+                    out.append(f"#text(font: mono-font, size: 0.94em)[{escape(inner)}]")
+                index = close + 1
+                continue
+        buffer.append(ch)
+        index += 1
+    if buffer:
+        out.append(escape("".join(buffer)))
+    return "".join(out)
+
+
 def mathify(text: str) -> str:
     out: list[str] = []
     buffer: list[str] = []
@@ -433,13 +461,13 @@ def field_rows(
     if template.idea:
         rows.append(("核心", template.idea, False))
     if template.usage:
-        rows.append(("用法", template.usage, True))
+        rows.append(("用法", template.usage, False))
     if template.pitfall:
         rows.append(("坑", template.pitfall, False))
     for paragraph in paragraphs:
         label, body = split_note(paragraph)
         if label:
-            rows.append((label, body, label in {"例", "用法"} and codeish(body)))
+            rows.append((label, body, label == "例" and codeish(body)))
         elif rows:
             prev_label, prev_body, prev_example = rows[-1]
             rows[-1] = (
@@ -460,7 +488,7 @@ def fields_markup(rows: list[tuple[str, str, bool]]) -> str:
             value = body.replace("`", "")
             content = f"example({json.dumps(value, ensure_ascii=False)})"
         else:
-            content = f"[{inline(body).replace(chr(10), ' ')}]"
+            content = f"[{inline_soft(body).replace(chr(10), ' ')}]"
         parts.append(f'    ("{label}", {content}),')
     return "#fields((\n" + "\n".join(parts) + "\n))"
 
