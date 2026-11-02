@@ -2,8 +2,7 @@
  * @brief 提交模板
  * @complexity -
  * @index -
- * @idea 现场赛提交骨架：调试宏、多测开关、板子区。
- * @usage 改 `solve()` 和 `namespace lib` 里的板子区。
+ * @verified
  * @print-boilerplate
  */
 #include <bits/stdc++.h>
