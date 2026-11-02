@@ -3,14 +3,11 @@
  * @complexity 预处理 O(n log n)，单次 O(log n)
  * @index 点 1-based
  *
- * 用途：求树上两点的 LCA 和距离。
- * 用法：`LCA lca(g, root);` 之后 `lca.lca(a, b)`、`lca.dist(a, b)`。
- * 建表用递归 DFS；本地默认 8MB 栈跑深链前先 `ulimit -s unlimited`。
- * 坑：g 必须是一棵树；带边权把 dep 改成到根的权值和。
+ * @idea 求树上两点的 LCA 和距离。
+ * @usage `LCA lca(g, root);` 之后 `lca.lca(a, b)`、`lca.dist(a, b)`。
+ * @pitfall g 必须是一棵树；带边权多维护一个 dis
  *
- * 例：
- *   LCA lca(g, 1);
- *   int z = lca.lca(u, v);
+ * @verified
  */
 #pragma once
 #include <bits/stdc++.h>
