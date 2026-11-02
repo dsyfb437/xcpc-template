@@ -3,14 +3,11 @@
  * @complexity 预处理 O(n)，路径拆成 O(log n) 段
  * @index 点 1-based，pos 0-based
  *
- * 用途：把树上路径拆成 O(log n) 段连续下标，接线段树/树状数组做路径查询、修改。
- * 用法：`HLD hld(g, root);` 之后 `hld.path(u, v, [&](int l, int r) { ... });`
- * 每段是 pos 的闭区间 [l, r]（0-based）；子树 u 是 [pos[u], pos[u] + sz[u] - 1]。
- * 递归建表；本地深链测试前先 `ulimit -s unlimited`。
- *
- * 例：
- *   HLD hld(g, 1);
- *   hld.path(u, v, [&](int l, int r) { ans += bit.range(l + 1, r + 1); });
+ * @idea 把树上路径拆成 O(log n) 段连续下标，接线段树/树状数组做路径查询、修改。
+ * @usage `HLD hld(g, root);` 之后 `hld.path(u, v, [&](int l, int r) { ... });`
+ *        每段是 pos 的闭区间 [l, r]（0-based）；子树 u 是 [pos[u], pos[u] + sz[u] - 1]。
+ * 
+ * @verified
  */
 #pragma once
 #include <bits/stdc++.h>
