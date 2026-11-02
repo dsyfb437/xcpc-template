@@ -400,7 +400,7 @@ def fields_markup(rows: list[tuple[str, str, bool]]) -> str:
     for label, body, is_example in rows:
         if is_example:
             # 例子按字符串交给 Typst：里面的 // 和引号不能当标记解析。
-            value = body.replace("`", "")
+            value = body.strip("\n").replace("`", "")
             content = f"example({json.dumps(value, ensure_ascii=False)})"
         else:
             content = f"[{inline_soft(body).replace(chr(10), ' #linebreak() ')}]"

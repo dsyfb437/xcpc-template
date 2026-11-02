@@ -20,7 +20,7 @@
 #let code-fill = rgb("#F7F8F8")
 #let code-rule = rgb("#E4E8EA")
 
-#let sans-font = ("Inter", "Noto Sans CJK SC", "DejaVu Sans")
+#let sans-font = ("Noto Sans CJK SC", "Noto Sans", "DejaVu Sans")
 #let mono-font = ("Noto Sans Mono", "Noto Sans Mono CJK SC", "DejaVu Sans Mono")
 
 #let body-size = 9.7pt
