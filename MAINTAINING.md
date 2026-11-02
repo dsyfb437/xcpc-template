@@ -12,34 +12,53 @@
 
 ```
 src/
-├── 01-basics/              # 基础
-├── 02-trees/               # 树上问题
-├── 03-graphs/              # 图论
-├── 04-network-flow/        # 网络流
-├── 05-number-theory/       # 数论
-├── 06-geometry/            # 几何
-├── 08-data-structures/     # 数据结构
-├── 09-dynamic-programming/ # 动态规划
-├── 10-strings/             # 字符串
-└── 14-misc/                # 杂项
+├── 01-basics/              基础
+├── 02-trees/               树上问题
+├── 03-graphs/              图论
+├── 03-graphs-notes/        图论结论与例题
+├── 04-network-flow/        网络流
+├── 05-number-theory/       数论
+├── 05-number-theory-notes/ 数论结论与例题
+├── 06-geometry/            几何
+├── 07-polynomials/         多项式
+├── 08-data-structures/     数据结构
+├── 09-dynamic-programming/ 动态规划
+├── 10-strings/             字符串
+├── 11-game-theory/         博弈论
+├── 12-stl/                 STL 与库函数
+├── 13-optimization/        卡常
+└── 14-misc/                杂项
 ```
 
 每个算法对应一个独立的 `.hpp` 文件。
 
+图论、数论、多项式、数据结构、动态规划、字符串、杂项这些章节内部再按模块
+分子目录，例如：
+
+```
+03-graphs/01-shortest/
+03-graphs/02-spanning-tree/
+05-number-theory/04-combinatorics/
+08-data-structures/03-balanced-tree/
+14-misc/03-mo/
+```
+
+子目录名同样用 `NN-短名`，文件编号在所在目录内从 01 开始。
+
 ### 1.2 命名规则
 
 - 目录名使用两位章节编号和小写英文短名。
-- 文件名使用 `NN-kebab-case.hpp` 格式。
-- `NN-` 用于控制章节内的排列顺序，不表达算法含义。
+- 文件名使用 `NN-kebab-case.hpp` 格式，子目录使用 `NN-短名`。
+- `NN-` 用于控制所在目录内的排列顺序，不表达算法含义。
 - 文件名应准确描述算法，不使用中文。
 - 中文算法名称统一写在文档块的 `@brief` 中。
 
 例如：
 
 ```
-05-centroid-decomposition.hpp
-06-tree-diameter.hpp
-07-lowest-common-ancestor.hpp
+02-trees/03-lca.hpp
+03-graphs/01-shortest/01-dijkstra.hpp
+08-data-structures/03-balanced-tree/02-treap.hpp
 ```
 
 新增模板时，应选择最合适的现有章节，不随意创建重复分类。

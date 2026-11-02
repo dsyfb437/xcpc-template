@@ -1,5 +1,5 @@
 /**
- * @brief 卡特兰数 / 斯特林数
+ * @brief Entringer Number
  * @complexity O(n^2)
  * @index -
  *

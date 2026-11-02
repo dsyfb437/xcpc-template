@@ -133,8 +133,14 @@ def load_book() -> tuple[dict, list[Chapter]]:
         directory = ALG / entry["dir"]
         templates: list[Template] = []
         if directory.is_dir():
-            for path in sorted(directory.iterdir()):
-                if path.suffix not in {".hpp", ".cpp"} or path.name.startswith("_"):
+            paths = sorted(
+                directory.rglob("*"),
+                key=lambda p: p.relative_to(directory).as_posix(),
+            )
+            for path in paths:
+                if not path.is_file() or path.suffix not in {".hpp", ".cpp"}:
+                    continue
+                if path.name.startswith("_"):
                     continue
                 template = parse_template(path)
                 templates.append(template)
