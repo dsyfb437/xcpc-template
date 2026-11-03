@@ -12,8 +12,10 @@ print.py 扫描 src/、按 book.toml 的章节生成 build/book.typ，再调用 
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -27,6 +29,7 @@ ROOT = Path(__file__).resolve().parent
 ALG = ROOT / "src"
 BOOK = ROOT / "book.toml"
 OUTPUT = ROOT / "output" / "pdf" / "template.pdf"
+VENDOR = ROOT / "book" / "vendor"
 
 
 CODE_WIDTH = 84
@@ -490,7 +493,7 @@ def build() -> None:
     subprocess.run(
         [
             find_typst(), "compile", "--root", str(ROOT),
-            str(source), str(OUTPUT),
+            "--package-path", str(VENDOR), str(source), str(OUTPUT),
         ],
         check=True,
     )
@@ -508,25 +511,35 @@ def build() -> None:
 
 def check() -> int:
     meta, chapters = load_book()
+    templates = [t for c in chapters for t in c.templates]
+
+    def check_one(template):
+        found = []
+        result = subprocess.run(
+            ["g++", "-std=c++20", "-fsyntax-only", "-x", "c++", str(template.path)],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            error = next((l for l in result.stderr.splitlines() if " error:" in l), "")
+            found.append(f"编译失败 {template.path.relative_to(ROOT)}: {error}")
+        for number, line in enumerate(template.code, 1):
+            if display_width(line) > CODE_WIDTH:
+                found.append(
+                    f"超宽 {template.path.relative_to(ROOT)}:{number}（{display_width(line)} 列）"
+                )
+        return found
+
     problems = 0
-    for chapter in chapters:
-        for template in chapter.templates:
-            result = subprocess.run(
-                ["g++", "-std=c++20", "-fsyntax-only", "-x", "c++", str(template.path)],
-                capture_output=True, text=True,
-            )
-            if result.returncode != 0:
-                error = next((l for l in result.stderr.splitlines() if " error:" in l), "")
-                print(f"编译失败 {template.path.relative_to(ROOT)}: {error}")
+    workers = min(8, os.cpu_count() or 4)
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for found in pool.map(check_one, templates):
+            for message in found:
+                print(message)
                 problems += 1
-            for number, line in enumerate(template.code, 1):
-                if display_width(line) > CODE_WIDTH:
-                    print(f"超宽 {template.path.relative_to(ROOT)}:{number}（{display_width(line)} 列）")
-                    problems += 1
     if problems:
         print(f"{problems} 个问题")
         return 1
-    print(f"检查通过：{sum(len(c.templates) for c in chapters)} 个板子")
+    print(f"检查通过：{len(templates)} 个板子")
     return 0
 
 
