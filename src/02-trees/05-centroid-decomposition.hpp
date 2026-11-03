@@ -3,16 +3,17 @@
  * @complexity O(n log n)
  * @index 点 1-based
  *
- * 用途：处理树上路径统计（距离、计数等），每层取重心再递归。
- * 用法：`CentroidDecomposition cd(g);`
- *       `cd.build(1, [&](int c) { ... });`
+ * @idea 处理树上路径统计（距离、计数等），每层取重心再递归。
+ * @usage `CentroidDecomposition cd(g);`
+ *        `cd.build(1, [&](int c) { ... });`
  * 回调在删 c 之前执行：对每个未删子树 DFS，统计经过 c 的路径。
  * cpar/cdep 是重心树父亲/深度；dead 是上层已删点。
- * 坑：g 必须是一棵连通树；n≥1；g 要活过 cd；只 build 一次。
+ * @pitfall g 必须是一棵连通树；n≥1；g 要活过 cd；只 build 一次。
  */
 #pragma once
 #include <bits/stdc++.h>
 using namespace std;
+using ll = long long;
 
 struct CentroidDecomposition {
     int n;
@@ -51,7 +52,7 @@ struct CentroidDecomposition {
     }
 
     template <class F>
-    int build(int entry, F process, int parent = 0, int depth = 0) {
+    int build(int entry, F &&process, int parent = 0, int depth = 0) {
         int c = centroid(entry);
         cpar[c] = parent; // 父子都在进函数时定好，process 里就能用
         cdep[c] = depth;

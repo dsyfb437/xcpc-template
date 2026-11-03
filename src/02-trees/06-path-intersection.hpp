@@ -1,16 +1,15 @@
 /**
  * @brief 树上路径交
- * @complexity 单次 O(log n)
+ * @complexity 预处理 O(n log n)，单次 O(log n)
  * @index 点 1-based
  *
- * 用途：求两条路径 (a,b)、(c,d) 的交。返回 {交的边数, 端点 x, 端点 y}；
- * 无交返回 {-1, 0, 0}。
- * 做法：交的端点必在 8 个候选点里（4 个原端点 + 4 个两两 LCA），
- * 筛出同时在两条路径上的点，取距离最远的一对。
- * 自带一份倍增 LCA，复制走不用带别的文件。
- *
- * 例：
- *   auto [len, x, y] = path_intersection(lca, a, b, c, d); */
+ * @idea 交集的端点在四个原端点和四个跨路径 LCA 中。
+ *       留下同时在两条路径上的点，取距离最远的一对。
+ * @usage `LCA lca(g, root);`
+ *        `auto [len, x, y] = path_intersection(lca, a, b, c, d);`
+ *        len 是公共边数，x、y 是交集的两个端点。
+ * @pitfall g 是非空无权树。无交返回 `{-1, 0, 0}`，只交一点时 len 为 0。
+ */
 #pragma once
 #include <bits/stdc++.h>
 using namespace std;
@@ -22,7 +21,7 @@ struct LCA {
     vector<int> dep;
 
     LCA(const vector<vector<int>> &g, int root = 1)
-        : n((int)g.size() - 1), LOG(n > 0 ? 32 - __builtin_clz(n) : 1),
+        : n((int)g.size() - 1), LOG(bit_width(static_cast<unsigned>(n))),
           up(LOG, vector<int>(n + 1)), dep(n + 1) {
         auto dfs = [&](auto &&self, int u, int p) -> void {
             up[0][u] = p;
