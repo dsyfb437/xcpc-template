@@ -44,7 +44,15 @@ jobs:
         run: python3 print.py --check
 
       - name: 生成打印稿
-        run: python3 print.py
+        run: |
+          for i in 1 2 3; do
+            if python3 print.py; then
+              exit 0
+            fi
+            echo "第 $i 次构建失败，5 秒后重试"
+            sleep 5
+          done
+          exit 1
 
       - uses: actions/upload-artifact@v4
         with:

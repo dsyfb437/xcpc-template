@@ -29,7 +29,6 @@ ROOT = Path(__file__).resolve().parent
 ALG = ROOT / "src"
 BOOK = ROOT / "book.toml"
 OUTPUT = ROOT / "output" / "pdf" / "template.pdf"
-VENDOR = ROOT / "book" / "vendor"
 
 
 CODE_WIDTH = 84
@@ -493,7 +492,7 @@ def build() -> None:
     subprocess.run(
         [
             find_typst(), "compile", "--root", str(ROOT),
-            "--package-path", str(VENDOR), str(source), str(OUTPUT),
+            str(source), str(OUTPUT),
         ],
         check=True,
     )
