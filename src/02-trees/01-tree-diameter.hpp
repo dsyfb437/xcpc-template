@@ -4,8 +4,8 @@
  * @index 点 1-based
  *
  * @idea 求树的直径（最远点对的距离）和两个端点。
- * 做法：从任一点 DFS 到最远点 u，再从 u DFS 到最远点 v。
- * 无权、带权（边权非负）各一个版本；邻接表 1-indexed。 
+ *       做法：从任一点 DFS 到最远点 u，再从 u DFS 到最远点 v。
+ *       无权、带权（边权非负）各一个版本；邻接表 1-indexed。 
  * @usage `auto [len, u, v] = tree_diameter(g);`
  * @pitfall 边权必须非负；负权树用树形 DP。
  *
