@@ -8,6 +8,7 @@ print.py 扫描 src/、按 book.toml 的章节生成 build/book.typ，再调用 
     python3 print.py            # 生成 output/pdf/template.pdf
     python3 print.py --watch    # 改完自动重排
     python3 print.py --check    # 编译 + 行宽检查
+    python3 print.py --all      # 连未验证的板子一起排，输出 all.pdf
 """
 from __future__ import annotations
 
@@ -29,6 +30,7 @@ ROOT = Path(__file__).resolve().parent
 ALG = ROOT / "src"
 BOOK = ROOT / "book.toml"
 OUTPUT = ROOT / "output" / "pdf" / "template.pdf"
+ALL_OUTPUT = ROOT / "output" / "pdf" / "all.pdf"
 
 
 CODE_WIDTH = 84
@@ -39,7 +41,7 @@ _BOILERPLATE = re.compile(
     r"^\s*(#\s*pragma\s+once\b.*|#\s*include\b.*|using\s+namespace\s+std\s*;"
     r"|using\s+ll\s*=\s*long\s+long\s*;)\s*$"
 )
-_ESCAPE = set("\\#$*_~`<@[]$")
+_ESCAPE = set("\\#$*_~`<@[]$/")
 
 
 @dataclass
@@ -317,8 +319,17 @@ def mathify(text: str) -> str:
                 if buffer:
                     out.append(escape("".join(buffer)))
                     buffer = []
-                inner = re.sub(r"\bsqrt\s+([A-Za-z0-9]+)", r"sqrt(\1)", text[index + 2 : close])
-                out.append(f"${char}({inner})$")
+                raw_inner = text[index + 2 : close]
+                inner = re.sub(r"\bsqrt\s+([A-Za-z0-9]+)", r"sqrt(\1)", raw_inner)
+                ops = {"log", "ln", "exp", "sin", "cos", "tan", "max", "min", "gcd", "lcm",
+                       "det", "mod", "abs", "floor", "ceil", "round", "sqrt", "frac",
+                       "sum", "prod", "int", "lim", "sup", "inf", "arg", "dim", "sgn"}
+                inner = re.sub(r"[A-Za-z]{2,}", lambda m: m.group(0) if m.group(0) in ops
+                               else r"\,".join(m.group(0)), inner)
+                if re.search(r"[\u4e00-\u9fff]", inner):
+                    out.append(escape(f"{char}({raw_inner})"))
+                else:
+                    out.append(f"${char}({inner})$")
                 index = close + 1
                 continue
         buffer.append(char)
@@ -419,9 +430,10 @@ def fields_markup(rows: list[tuple[str, str, bool]]) -> str:
 def render(
     meta: dict,
     chapters: list[Chapter],
+    include_all: bool = False,
 ) -> str:
     written = [
-        Chapter(chapter.title, [t for t in chapter.templates if t.verified])
+        Chapter(chapter.title, [t for t in chapter.templates if include_all or t.verified])
         for chapter in chapters
     ]
     written = [chapter for chapter in written if chapter.templates]
@@ -479,30 +491,33 @@ def find_typst() -> str:
     sys.exit("找不到 typst：装一个（单文件二进制），或看 README。")
 
 
-def build() -> None:
+def build(include_all: bool = False) -> None:
     meta, chapters = load_book()
-    source = ROOT / "build" / "book.typ"
+    output = ALL_OUTPUT if include_all else OUTPUT
+    source = ROOT / "build" / ("book-all.typ" if include_all else "book.typ")
     source.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    index = {t.path: t for c in chapters for t in c.templates}
-    source.write_text(render(meta, chapters), encoding="utf-8")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text(render(meta, chapters, include_all), encoding="utf-8")
     subprocess.run(
         [
             find_typst(), "compile", "--root", str(ROOT),
-            str(source), str(OUTPUT),
+            str(source), str(output),
         ],
         check=True,
     )
-    written_chapters = sum(1 for c in chapters if any(t.verified for t in c.templates))
-    written = sum(1 for c in chapters for t in c.templates if t.verified)
+    if include_all:
+        written_chapters = sum(1 for c in chapters if c.templates)
+        written = sum(len(c.templates) for c in chapters)
+        label = "全部板子"
+    else:
+        written_chapters = sum(1 for c in chapters if any(t.verified for t in c.templates))
+        written = sum(1 for c in chapters for t in c.templates if t.verified)
+        label = "已验证板子"
     try:
-        out_label = OUTPUT.relative_to(ROOT)
+        out_label = output.relative_to(ROOT)
     except ValueError:
-        out_label = OUTPUT
-    print(
-        f"{out_label}：{written_chapters} 章 / {written} 个已验证板子",
-        flush=True,
-    )
+        out_label = output
+    print(f"{out_label}：{written_chapters} 章 / {written} 个{label}", flush=True)
 
 
 def check() -> int:
@@ -544,9 +559,9 @@ def snapshot() -> dict[Path, float]:
     return {p: p.stat().st_mtime for p in paths if p.is_file()}
 
 
-def watch() -> None:
+def watch(include_all: bool = False) -> None:
     print("监视 algorithms/ 和 book/，Ctrl-C 退出。", flush=True)
-    build()
+    build(include_all)
     last = snapshot()
     while True:
         time.sleep(0.6)
@@ -555,7 +570,7 @@ def watch() -> None:
             continue
         last = current
         try:
-            build()
+            build(include_all)
         except subprocess.CalledProcessError:
             print("编译没过，等下一次改动。", flush=True)
 
@@ -564,17 +579,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="src/ → PDF")
     parser.add_argument("--watch", action="store_true", help="改完自动重排")
     parser.add_argument("--check", action="store_true", help="只做编译和行宽检查")
+    parser.add_argument("--all", action="store_true", help="连未验证模板一起排（全量预览）")
     args = parser.parse_args()
 
     if args.check:
         raise SystemExit(check())
     if args.watch:
         try:
-            watch()
+            watch(args.all)
         except KeyboardInterrupt:
             pass
     else:
-        build()
+        build(args.all)
 
 
 if __name__ == "__main__":

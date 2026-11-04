@@ -46,7 +46,7 @@ jobs:
       - name: 生成打印稿
         run: |
           for i in 1 2 3; do
-            if python3 print.py; then
+            if python3 print.py && python3 print.py --all; then
               exit 0
             fi
             echo "第 $i 次构建失败，5 秒后重试"
@@ -56,8 +56,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: template-book
-          path: output/pdf/template.pdf
+          name: template-books
+          path: |
+            output/pdf/template.pdf
+            output/pdf/all.pdf
           if-no-files-found: error
           retention-days: 30
 
@@ -72,7 +74,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: template-book
+          name: template-books
           path: output/pdf
       - name: 发布最新打印稿
         env:
@@ -86,10 +88,10 @@ jobs:
           fi
           print_tag="print-${GITHUB_SHA:0:12}"
           if gh release view "$print_tag" >/dev/null 2>&1; then
-            gh release upload "$print_tag" output/pdf/template.pdf --clobber
+            gh release upload "$print_tag" output/pdf/template.pdf output/pdf/all.pdf --clobber
           else
-            printf '按源码版本 %s 自动生成。\n' "$GITHUB_SHA" > notes.md
-            gh release create "$print_tag" output/pdf/template.pdf \
+            printf '按源码版本 %s 自动生成。\n\ntemplate.pdf：只含已验证板子。\nall.pdf：含全部板子的预览版。\n' "$GITHUB_SHA" > notes.md
+            gh release create "$print_tag" output/pdf/template.pdf output/pdf/all.pdf \
               --target "$GITHUB_SHA" --title "打印稿 · $(date -u +%F) · ${GITHUB_SHA:0:7}" \
               --notes-file notes.md --latest
           fi
