@@ -442,15 +442,12 @@ def render(
         out.append("#pagebreak(weak: true)")
         out.append(f"= {escape(chapter.title)}")
         out.append("")
-        for position, template in enumerate(chapter.templates):
+        for template in chapter.templates:
             body: list[str] = []
             for line in template.code:
                 body.extend(wrap_line(line))
             paragraphs = join_notes(template.notes)
             rows = field_rows(template, paragraphs)
-            # 每节从新页开始：标题一定在页首，超长自然续页，不做高度估算
-            if position > 0:
-                out.append("#pagebreak(weak: true)")
             badge = mathify(template.complexity) if template.complexity else ""
             if template.index:
                 badge = f"{badge} · {escape(template.index)}" if badge else escape(template.index)

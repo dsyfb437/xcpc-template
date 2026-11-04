@@ -1,8 +1,8 @@
 // 版式只在这个文件里维护；内容是 print.py 生成的 build/book.typ，不手改。
-// 版式版本：v2（2026-11-01）字段卡片 + 代码卡片；细节见同目录 README.md。
+// 版式版本：v2（2026-11-01）字段卡片 + 代码卡片。
 //
 // 设计目标：A4 单面、左边装订、黑白优先；说明做成"字段卡片"，
-// 代码做成"代码卡片"，长板允许分页但页眉保留当前小节。
+// 代码做成"代码卡片"，长板允许分页，页眉保留当前章名。
 // 改版式请单独提交，并在提交信息里写"版式"，然后重跑
 // `python3 print.py --check` 和 `python3 print.py`。
 #import "@preview/codly:1.3.0": *
@@ -253,20 +253,9 @@
       } else {
         ""
       }
-      let sections = query(heading.where(level: 2))
-      let on-page = sections.filter(h => h.location().page() == here-page)
-      let before = sections.filter(h => h.location().page() < here-page)
-      let section = if on-page.len() > 0 {
-        on-page.first().body
-      } else if before.len() > 0 {
-        before.last().body
-      } else {
-        ""
-      }
-      let current = if section != "" { section } else { chapter }
       let recto = not duplex or calc.odd(here-page)
-      let left-text = if recto { short } else { current }
-      let right-text = if recto { current } else { short }
+      let left-text = if recto { short } else { chapter }
+      let right-text = if recto { chapter } else { short }
       block(
         width: 100%,
         inset: (bottom: 5pt),
