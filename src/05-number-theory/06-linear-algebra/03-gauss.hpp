@@ -2,6 +2,7 @@
  * @brief 高斯消元（实数）
  * @complexity O(n^3)
  * @index vector 0-based
+ * @pitfall A 为方阵，b 长度相同。主元绝对值小于 eps 时当作 0；eps 必须为正，可按数据尺度调整，病态矩阵误差可能较大。
  *
  * 解 n 元一次方程组 A x = b；无解或无穷多解返回空 vector。
  * 例：
@@ -14,9 +15,8 @@
 using namespace std;
 using ld = long double;
 
-inline vector<ld> gauss(vector<vector<ld>> a, vector<ld> b) {
+inline vector<ld> gauss(vector<vector<ld>> a, vector<ld> b, ld eps = 1e-12L) {
     int n = a.size();
-    const ld eps = 1e-12;
     for (int col = 0; col < n; col++) {
         int piv = col;
         for (int r = col + 1; r < n; r++)

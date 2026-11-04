@@ -1,6 +1,7 @@
 /**
  * @brief 线性基（异或）
- * @complexity O(64) 每次插入/查询
+ * @complexity O(63) 每次插入/查询
+ * @pitfall 只接受非负 long long，处理第 0 到第 62 位。
  *
  * 维护一组数的异或空间：插入若干数后，能异或出的最大值就是 max_xor()。
  * 例：

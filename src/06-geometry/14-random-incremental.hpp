@@ -22,8 +22,12 @@ inline optional<pair<ld, ld>> linear_program_2d(vector<LinearConstraint2D> plane
                                                 ull seed = random_device{}(),
                                                 ld eps = 1e-12L) {
     for (auto &[a, b, c] : planes) {
-        ld len = hypot(a, b);
-        if (len != 0) {
+        ld scale = max(abs(a), abs(b));
+        if (scale != 0) {
+            a /= scale;
+            b /= scale;
+            c /= scale;
+            ld len = hypot(a, b);
             a /= len;
             b /= len;
             c /= len;
@@ -31,8 +35,11 @@ inline optional<pair<ld, ld>> linear_program_2d(vector<LinearConstraint2D> plane
             return nullopt;
         }
     }
-    ld norm = hypot(dx, dy);
-    if (norm) {
+    ld scale = max(abs(dx), abs(dy));
+    if (scale) {
+        dx /= scale;
+        dy /= scale;
+        ld norm = hypot(dx, dy);
         dx /= norm;
         dy /= norm;
     }

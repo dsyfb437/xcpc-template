@@ -1,13 +1,10 @@
 /**
  * @brief 最小费用最大流（SPFA 增广）
- * @complexity O(F · n · m)，F 是最终流量
+ * @complexity O(F n m)，F 是最终流量
  * @index 点 1-based
- *
- * 每次沿「单位费用最短路」增广一条，适合图不大、费用非负的题。
- * 例：
- *   MCMF mcmf(n);
- *   mcmf.add_edge(u, v, cap, cost);
- *   auto [flow, cost] = mcmf.flow(s, t);
+ * @idea 每次用 SPFA 找费用最小的增广路，沿路送流。
+ * @usage MCMF f(n); f.add_edge(u, v, cap, cost); f.flow(s, t) 返回本次新增的 {流量, 费用}。
+ * @pitfall s、t 必须不同，容量非负。允许负边，但不能有负费用环。流量和答案须放进 long long；距离和费用中间量用 __int128。
  */
 #pragma once
 #include <bits/stdc++.h>
@@ -15,9 +12,11 @@ using namespace std;
 using ll = long long;
 
 struct MCMF {
+    using Wide = __int128;
     struct Edge {
         int to, rev;
-        ll cap, cost;
+        ll cap;
+        Wide cost;
     };
 
     int n;
@@ -26,15 +25,19 @@ struct MCMF {
     explicit MCMF(int n) : n(n), g(n + 1) {}
 
     void add_edge(int u, int v, ll cap, ll cost) {
-        g[u].push_back({v, (int)g[v].size(), cap, cost});
-        g[v].push_back({u, (int)g[u].size() - 1, 0, -cost});
+        int id = (int)g[u].size();
+        int back = (int)g[v].size() + (u == v);
+        g[u].push_back({v, back, cap, Wide(cost)});
+        g[v].push_back({u, id, 0, -Wide(cost)});
     }
 
     // 返回 {最大流量, 最小费用}
     pair<ll, ll> flow(int s, int t) {
-        const ll INF = LLONG_MAX / 4;
-        ll total_flow = 0, total_cost = 0;
-        vector<ll> dist(n + 1);
+        assert(s != t);
+        constexpr Wide INF = Wide{1} << 120;
+        ll total_flow = 0;
+        Wide total_cost = 0;
+        vector<Wide> dist(n + 1);
         vector<int> inq(n + 1), pv(n + 1), pe(n + 1);
         while (true) {
             fill(dist.begin(), dist.end(), INF);
@@ -63,7 +66,7 @@ struct MCMF {
             if (dist[t] == INF)
                 break;
 
-            ll add = INF;
+            ll add = LLONG_MAX;
             for (int v = t; v != s; v = pv[v])
                 add = min(add, g[pv[v]][pe[v]].cap);
             for (int v = t; v != s; v = pv[v]) {
@@ -74,6 +77,6 @@ struct MCMF {
             }
             total_flow += add;
         }
-        return {total_flow, total_cost};
+        return {total_flow, (ll)total_cost};
     }
 };

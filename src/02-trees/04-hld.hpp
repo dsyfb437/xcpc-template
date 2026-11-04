@@ -6,6 +6,7 @@
  * @idea 把树上路径拆成 O(log n) 段连续下标，接线段树/树状数组做路径查询、修改。
  * @usage `HLD hld(g, root);` 之后 `hld.path(u, v, [&](int l, int r) { ... });`
  *        每段是 pos 的闭区间 [l, r]（0-based）；子树 u 是 [pos[u], pos[u] + sz[u] - 1]。
+ * @pitfall g 是非空树，且在 hld 使用期间有效。path 回调的段没有按 u 到 v 的方向排序，适合顺序无关的统计。
  * 
  * @verified
  */
@@ -25,27 +26,40 @@ struct HLD {
         dfs2(root, root);
     }
 
-    void dfs1(int u, int p) {
-        par[u] = p;
-        sz[u] = 1;
-        for (int v : g[u])
-            if (v != p) {
+    void dfs1(int root, int parent) {
+        vector<int> order{root};
+        par[root] = parent;
+        for (int i = 0; i < (int)order.size(); i++) {
+            int u = order[i];
+            sz[u] = 1;
+            heavy[u] = 0;
+            for (int v : g[u]) {
+                if (v == par[u]) continue;
+                par[v] = u;
                 dep[v] = dep[u] + 1;
-                dfs1(v, u);
-                sz[u] += sz[v];
-                if (sz[v] > sz[heavy[u]])
-                    heavy[u] = v;
+                order.push_back(v);
             }
+        }
+        for (int i = (int)order.size() - 1; i > 0; i--) {
+            int u = order[i], p = par[u];
+            sz[p] += sz[u];
+            if (sz[u] >= sz[heavy[p]]) heavy[p] = u;
+        }
     }
 
-    void dfs2(int u, int h) {
-        top[u] = h;
-        pos[u] = cur++;
-        if (heavy[u])
-            dfs2(heavy[u], h);
-        for (int v : g[u])
-            if (v != par[u] && v != heavy[u])
-                dfs2(v, v);
+    void dfs2(int root, int head) {
+        vector<pair<int, int>> stack{{root, head}};
+        while (!stack.empty()) {
+            auto [u, h] = stack.back();
+            stack.pop_back();
+            top[u] = h;
+            pos[u] = cur++;
+            for (auto it = g[u].rbegin(); it != g[u].rend(); ++it) {
+                int v = *it;
+                if (v != par[u] && v != heavy[u]) stack.emplace_back(v, v);
+            }
+            if (heavy[u]) stack.emplace_back(heavy[u], h);
+        }
     }
 
     // 把 u-v 路径拆成若干闭区间 [l, r]，依次调用 f(l, r)。

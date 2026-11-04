@@ -38,7 +38,8 @@ inline optional<InversionPoint> invert_point(InversionPoint p,
     ld d = v.norm();
     if (d == 0)
         return nullopt;
-    return origin + v * ((R / d) * (R / d));
+    InversionPoint unit{v.x / d, v.y / d};
+    return origin + unit * (R * (R / d));
 }
 
 inline InversionCurve invert_line(InversionLine line, InversionPoint origin, ld R,

@@ -5,7 +5,8 @@
  *
  * 前缀和：pre[i] = a[0] + ... + a[i-1]，区间 [l, r] 的和是 pre[r+1] - pre[l]。
  * 差分：diff[0] = a[0]，diff[i] = a[i] - a[i-1]；区间加 v 只要 diff[l] += v、
- * diff[r+1] -= v，再前缀和还原。
+ * 当 r+1 < n 时再做 diff[r+1] -= v，然后前缀和还原。
+ * @pitfall difference 返回长度为 n 的数组。前缀和、相邻差和修改后的中间结果都要能放进 long long。
  * 例：
  *   `auto pre = prefix_sum(a);`
  *   `ll s = pre[r + 1] - pre[l];`

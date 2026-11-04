@@ -2,9 +2,10 @@
  * @brief 实数二分
  * @complexity O(100)
  * 
- * @idea check 单调时，在实数区间 [lo, hi] 上找边界。固定迭代 100 次，区间缩到 (hi - lo) / 2^100，1e-12 精度够用。
+ * @idea check 单调时，在实数区间 [lo, hi] 上找边界，固定迭代 100 次。
  * check 的单调性：real_first_true 先假后真，real_last_true 先真后假。
  * @usage `ld x = real_first_true(0, 1e9, [&](ld m) { return m * m >= v; });`
+ * @pitfall 端点有限且 lo ≤ hi。精度受初始区间宽度和浮点舍入限制，端点很大时不能保证 1e-12 的绝对误差。
  * 
  * @verified
  */

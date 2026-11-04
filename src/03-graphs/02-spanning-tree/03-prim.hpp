@@ -4,7 +4,7 @@
  * @index 矩阵 0-based
  * @idea 每次选离生成树最近的点，再用它更新其他点到树的最便宜边。
  * @usage auto cost = prim(w); w[u][v] 是无向边权，重边取最小，无边填 PRIM_INF。
- * @pitfall 稠密图用矩阵版。不连通返回 nullopt。边权可为负，须小于 PRIM_INF。
+ * @pitfall 稠密图用矩阵版。不连通返回 nullopt。边权可为负，须小于 PRIM_INF，累加权值须放进 long long。
  */
 #pragma once
 #include <bits/stdc++.h>

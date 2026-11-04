@@ -22,43 +22,47 @@ inline vector<vector<int>> vertex_bcc(int n, const vector<pair<int, int>> &edges
     vector<vector<int>> blocks;
     vector<int> tin(n), low(n), stack, seen(n, -1);
     int timer = 0;
-    auto dfs = [&](auto &&self, int u, int incoming) -> void {
-        tin[u] = low[u] = ++timer;
-        for (auto [v, id] : g[u]) {
-            if (id == incoming)
-                continue;
-            if (!tin[v]) {
-                stack.push_back(id);
-                self(self, v, id);
-                low[u] = min(low[u], low[v]);
-                if (low[v] < tin[u])
-                    continue;
-
-                int block_id = (int)blocks.size();
-                auto &block = blocks.emplace_back();
-                while (true) {
-                    int edge = stack.back();
-                    stack.pop_back();
-                    auto [a, b] = edges[edge];
-                    for (int x : {a, b})
-                        if (seen[x] != block_id) {
-                            seen[x] = block_id;
-                            block.push_back(x);
-                        }
-                    if (edge == id)
-                        break;
+    struct Frame { int u, incoming, next; };
+    for (int root = 0; root < n; root++) {
+        if (tin[root]) continue;
+        tin[root] = low[root] = ++timer;
+        if (g[root].empty()) blocks.push_back({root});
+        vector<Frame> frames{{root, -1, 0}};
+        while (!frames.empty()) {
+            auto &f = frames.back();
+            if (f.next < (int)g[f.u].size()) {
+                auto [v, id] = g[f.u][f.next++];
+                if (id == f.incoming) continue;
+                if (!tin[v]) {
+                    stack.push_back(id);
+                    tin[v] = low[v] = ++timer;
+                    frames.push_back({v, id, 0});
+                } else if (tin[v] < tin[f.u]) {
+                    stack.push_back(id);
+                    low[f.u] = min(low[f.u], tin[v]);
                 }
-            } else if (tin[v] < tin[u]) {
-                stack.push_back(id);
-                low[u] = min(low[u], tin[v]);
+                continue;
+            }
+            int u = f.u, id = f.incoming;
+            frames.pop_back();
+            if (frames.empty()) continue;
+            int parent = frames.back().u;
+            low[parent] = min(low[parent], low[u]);
+            if (low[u] < tin[parent]) continue;
+            int block_id = (int)blocks.size();
+            auto &block = blocks.emplace_back();
+            while (true) {
+                int edge = stack.back();
+                stack.pop_back();
+                auto [a, b] = edges[edge];
+                for (int x : {a, b})
+                    if (seen[x] != block_id) {
+                        seen[x] = block_id;
+                        block.push_back(x);
+                    }
+                if (edge == id) break;
             }
         }
-    };
-    for (int u = 0; u < n; u++) {
-        if (g[u].empty())
-            blocks.push_back({u});
-        else if (!tin[u])
-            dfs(dfs, u, -1);
     }
     return blocks;
 }

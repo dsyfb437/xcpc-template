@@ -6,8 +6,8 @@
  * 用途：求一条欧拉路（每条边恰好经过一次）。
  * 无向图 g[u] 存 {邻点, 边编号}，每条边加两次；有向图 g[u] 存出边 {v, 边编号}。
  * 返回 {ok, 点序列 vs, 边序列 es}；ok = false 表示不存在。
- * 递归 Hierholzer；本地深链测试前先 `ulimit -s unlimited`。
- * 自环、平行边都按边编号处理。
+ * 显式栈模拟走边，退栈时记录点和入边，再反转得到答案。
+ * 自环、平行边都按边编号处理。没有顶点时返回成功和空路径。
  *
  * 例：
  *   g[u].push_back({v, id}); g[v].push_back({u, id});
@@ -28,6 +28,7 @@ inline EulerTrail euler_trail_undirected(const vector<vector<pair<int, int>>> &g
                                          int m) {
     int n = (int)g.size() - 1;
     EulerTrail res;
+    if (n == 0) return {true, {}, {}};
     vector<int> deg(n + 1);
     int odd = 0, start = 0;
     for (int u = 1; u <= n; u++) {
@@ -64,19 +65,21 @@ inline EulerTrail euler_trail_undirected(const vector<vector<pair<int, int>>> &g
     auto h = g;
     vector<char> used(m, 0);
     vector<int> circuit, edge_path;
-    auto dfs = [&](auto &&self, int u) -> void {
-        while (!h[u].empty()) {
-            auto [v, eid] = h[u].back();
+    vector<pair<int, int>> frames{{start, -1}};
+    while (!frames.empty()) {
+        auto [u, incoming] = frames.back();
+        while (!h[u].empty() && used[h[u].back().second]) h[u].pop_back();
+        if (h[u].empty()) {
+            circuit.push_back(u);
+            if (incoming != -1) edge_path.push_back(incoming);
+            frames.pop_back();
+        } else {
+            auto [v, id] = h[u].back();
             h[u].pop_back();
-            if (used[eid])
-                continue;
-            used[eid] = 1;
-            self(self, v);
-            edge_path.push_back(eid);
+            used[id] = 1;
+            frames.emplace_back(v, id);
         }
-        circuit.push_back(u);
-    };
-    dfs(dfs, start);
+    }
     reverse(circuit.begin(), circuit.end());
     reverse(edge_path.begin(), edge_path.end());
     if ((int)circuit.size() != m + 1)
@@ -92,6 +95,7 @@ inline EulerTrail euler_trail_directed(const vector<vector<pair<int, int>>> &g,
                                        int m) {
     int n = (int)g.size() - 1;
     EulerTrail res;
+    if (n == 0) return {true, {}, {}};
     vector<int> in(n + 1), out(n + 1);
     for (int u = 1; u <= n; u++)
         for (auto [v, eid] : g[u]) {
@@ -143,19 +147,21 @@ inline EulerTrail euler_trail_directed(const vector<vector<pair<int, int>>> &g,
     auto h = g;
     vector<char> used(m, 0);
     vector<int> circuit, edge_path;
-    auto dfs = [&](auto &&self, int u) -> void {
-        while (!h[u].empty()) {
-            auto [v, eid] = h[u].back();
+    vector<pair<int, int>> frames{{start, -1}};
+    while (!frames.empty()) {
+        auto [u, incoming] = frames.back();
+        while (!h[u].empty() && used[h[u].back().second]) h[u].pop_back();
+        if (h[u].empty()) {
+            circuit.push_back(u);
+            if (incoming != -1) edge_path.push_back(incoming);
+            frames.pop_back();
+        } else {
+            auto [v, id] = h[u].back();
             h[u].pop_back();
-            if (used[eid])
-                continue;
-            used[eid] = 1;
-            self(self, v);
-            edge_path.push_back(eid);
+            used[id] = 1;
+            frames.emplace_back(v, id);
         }
-        circuit.push_back(u);
-    };
-    dfs(dfs, start);
+    }
     reverse(circuit.begin(), circuit.end());
     reverse(edge_path.begin(), edge_path.end());
     if ((int)circuit.size() != m + 1)

@@ -5,7 +5,8 @@
  *
  * 用途：无向带权图的最小生成树，返回总权值和选中的边下标。
  * 用法：`auto [cost, ids] = kruskal(n, edges);`，不连通时 cost = -1。
- * 边结构 {u, v, w, id}，点 1-indexed；自带迷你并查集，不依赖数据结构章。
+ * 边结构 {u, v, id, w}，点 1-indexed；自带迷你并查集，不依赖数据结构章。
+ * @pitfall n 至少为 1，累加权值须放进 long long。允许负权，cost 为 -1 时还要看 ids 是否有 n-1 条边，判断是否连通。
  *
  * 例：
  *   vector<Edge> es = {{u, v, id, w}, ...};

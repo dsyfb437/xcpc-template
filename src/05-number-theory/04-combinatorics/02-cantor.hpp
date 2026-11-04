@@ -7,7 +7,7 @@
  * 例：
  *   ll r = cantor_rank(p);          // p 是 1..n 的排列
  *   vector<int> q = cantor_unrank(n, r);
- * 坑：n 最多 20（20! 还在 ll 范围内），再大需要高精度。
+ * 坑：0 <= n <= 20（20! 还在 ll 范围内）；逆康托要求 0 <= r < n!。
  */
 #pragma once
 #include <bits/stdc++.h>

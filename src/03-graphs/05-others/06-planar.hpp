@@ -4,7 +4,7 @@
  * @index 点和边编号 0-based
  * @idea 给 DFS 边定向并算返祖边的最低点。按嵌套深度处理出边，用冲突对栈检查左右约束能否同时满足。
  * @usage is_planar(n, edges) 返回图是否可平面嵌入。
- * @pitfall 输入是简单无向图，可不连通。判定使用递归 DFS。
+ * @pitfall 输入是简单无向图，可不连通。两个 DFS 阶段都用显式栈，支持深链。
  */
 #pragma once
 #include <bits/stdc++.h>
@@ -23,8 +23,38 @@ inline bool is_planar(int n, const vector<pair<int, int>> &edges) {
     }
     vector<int> height(n, -1), parent(n, -1), to(m, -1), roots;
     vector<int> low(m), second(m), nesting(m);
-    auto orient = [&](auto &&self, int u) -> void {
-        for (int e : incident[u]) {
+    auto finish_edge = [&](int u, int e) {
+        nesting[e] = 2 * low[e] + (second[e] < height[u]);
+        int p = parent[u];
+        if (p == -1)
+            return;
+        if (low[e] < low[p]) {
+            second[p] = min(low[p], second[e]);
+            low[p] = low[e];
+        } else if (low[e] > low[p]) {
+            second[p] = min(second[p], low[e]);
+        } else {
+            second[p] = min(second[p], second[e]);
+        }
+    };
+    for (int root = 0; root < n; root++) {
+        if (height[root] != -1)
+            continue;
+        roots.push_back(root);
+        height[root] = 0;
+        vector<pair<int, int>> frames{{root, 0}};
+        while (!frames.empty()) {
+            auto &[u, next] = frames.back();
+            if (next == (int)incident[u].size()) {
+                int e = parent[u], child = u;
+                frames.pop_back();
+                if (e != -1) {
+                    auto [a, b] = edges[e];
+                    finish_edge(a == child ? b : a, e);
+                }
+                continue;
+            }
+            int e = incident[u][next++];
             if (to[e] != -1)
                 continue;
             auto [a, b] = edges[e];
@@ -35,30 +65,13 @@ inline bool is_planar(int n, const vector<pair<int, int>> &edges) {
             if (height[v] == -1) {
                 parent[v] = e;
                 height[v] = height[u] + 1;
-                self(self, v);
+                frames.emplace_back(v, 0);
             } else {
                 low[e] = height[v];
-            }
-            nesting[e] = 2 * low[e] + (second[e] < height[u]);
-            int p = parent[u];
-            if (p == -1)
-                continue;
-            if (low[e] < low[p]) {
-                second[p] = min(low[p], second[e]);
-                low[p] = low[e];
-            } else if (low[e] > low[p]) {
-                second[p] = min(second[p], low[e]);
-            } else {
-                second[p] = min(second[p], second[e]);
+                finish_edge(u, e);
             }
         }
-    };
-    for (int u = 0; u < n; u++)
-        if (height[u] == -1) {
-            roots.push_back(u);
-            height[u] = 0;
-            orient(orient, u);
-        }
+    }
     for (auto &list : out)
         sort(list.begin(), list.end(),
              [&](int a, int b) { return nesting[a] < nesting[b]; });
@@ -151,14 +164,37 @@ inline bool is_planar(int n, const vector<pair<int, int>> &edges) {
         }
     };
 
-    auto check = [&](auto &&self, int u) -> bool {
-        int p = parent[u];
-        for (int e : out[u]) {
-            int v = to[e], bottom = (int)stack.size();
-            if (parent[v] == e) {
-                if (!self(self, v))
-                    return false;
+    struct Frame {
+        int u, next = 0, pending = -1, bottom = 0;
+    };
+    for (int root : roots) {
+        vector<Frame> frames{{root}};
+        while (!frames.empty()) {
+            auto &f = frames.back();
+            int u = f.u, p = parent[u], e, bottom;
+            if (f.pending != -1) {
+                // 子树已处理完，回来合并这条树边的约束。
+                e = f.pending;
+                bottom = f.bottom;
+                f.pending = -1;
             } else {
+                if (f.next == (int)out[u].size()) {
+                    if (p != -1) {
+                        auto [a, b] = edges[p];
+                        trim(p, a == u ? b : a);
+                    }
+                    frames.pop_back();
+                    continue;
+                }
+                e = out[u][f.next++];
+                bottom = (int)stack.size();
+                int v = to[e];
+                if (parent[v] == e) {
+                    f.pending = e;
+                    f.bottom = bottom;
+                    frames.push_back({v});
+                    continue;
+                }
                 first_return[e] = e;
                 stack.push_back({{}, {e, e}});
             }
@@ -169,14 +205,6 @@ inline bool is_planar(int n, const vector<pair<int, int>> &edges) {
             else if (!merge_constraints(e, p, bottom))
                 return false;
         }
-        if (p != -1) {
-            auto [a, b] = edges[p];
-            trim(p, a == u ? b : a);
-        }
-        return true;
-    };
-    for (int u : roots)
-        if (!check(check, u))
-            return false;
+    }
     return true;
 }

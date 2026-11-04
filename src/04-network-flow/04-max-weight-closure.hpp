@@ -29,18 +29,32 @@ struct ClosureFlow {
         return id;
     }
 
-    ll send(int u, int t, ll limit) {
-        if (u == t)
-            return limit;
-        for (int &i = next[u]; i < (int)g[u].size(); i++) {
-            auto &e = g[u][i];
-            if (!e.cap || level[e.to] != level[u] + 1)
-                continue;
-            ll sent = send(e.to, t, min(limit, e.cap));
-            if (sent) {
-                e.cap -= sent;
-                g[e.to][e.reverse].cap += sent;
-                return sent;
+    ll send(int s, int t, ll limit) {
+        // 沿层次图找一条增广路，用显式栈避免深链爆栈。
+        vector<pair<int, ll>> path{{s, limit}};
+        while (!path.empty()) {
+            auto [u, cap] = path.back();
+            if (u == t) {
+                for (int j = 0; j + 1 < (int)path.size(); j++) {
+                    int v = path[j].first;
+                    auto &e = g[v][next[v]];
+                    e.cap -= cap;
+                    g[e.to][e.reverse].cap += cap;
+                }
+                return cap;
+            }
+            int &i = next[u];
+            while (i < (int)g[u].size() &&
+                   (!g[u][i].cap || level[g[u][i].to] != level[u] + 1))
+                i++;
+            if (i < (int)g[u].size()) {
+                const auto &e = g[u][i];
+                path.emplace_back(e.to, min(cap, e.cap));
+            } else {
+                level[u] = -1;
+                path.pop_back();
+                if (!path.empty())
+                    next[path.back().first]++;
             }
         }
         return 0;

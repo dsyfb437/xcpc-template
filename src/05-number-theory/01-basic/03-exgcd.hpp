@@ -2,8 +2,8 @@
  * @brief 扩展欧几里得 / 逆元
  * @complexity O(log min(a, b))
  *
- * 返回 gcd(a, b)，并解出 a*x + b*y = gcd(a, b)。
- * inv_mod 在 gcd(a, m) != 1 时返回 -1（没有逆元）。
+ * exgcd 要求 a、b 非负，返回 gcd(a, b)，并解出 a*x + b*y = gcd(a, b)。
+ * inv_mod 的 a 可以为负，m 必须为正；没有逆元或模数非法时返回 -1。
  *
  * 例：
  *   ll x, y;
@@ -25,8 +25,14 @@ ll exgcd(ll a, ll b, ll &x, ll &y) {
 }
 
 ll inv_mod(ll a, ll m) {
+    if (m <= 0)
+        return -1;
+    a %= m;
+    if (a < 0)
+        a += m;
     ll x, y;
     if (exgcd(a, m, x, y) != 1)
         return -1;
-    return (x % m + m) % m;
+    x %= m;
+    return x < 0 ? x + m : x;
 }

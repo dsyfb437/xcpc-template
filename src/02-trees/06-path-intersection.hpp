@@ -23,15 +23,16 @@ struct LCA {
     LCA(const vector<vector<int>> &g, int root = 1)
         : n((int)g.size() - 1), LOG(bit_width(static_cast<unsigned>(n))),
           up(LOG, vector<int>(n + 1)), dep(n + 1) {
-        auto dfs = [&](auto &&self, int u, int p) -> void {
-            up[0][u] = p;
-            for (int v : g[u])
-                if (v != p) {
-                    dep[v] = dep[u] + 1;
-                    self(self, v, u);
-                }
-        };
-        dfs(dfs, root, 0);
+        vector<int> order{root};
+        for (int i = 0; i < n; i++) {
+            int u = order[i];
+            for (int v : g[u]) {
+                if (v == up[0][u]) continue;
+                up[0][v] = u;
+                dep[v] = dep[u] + 1;
+                order.push_back(v);
+            }
+        }
         for (int j = 1; j < LOG; j++)
             for (int u = 1; u <= n; u++)
                 up[j][u] = up[j - 1][up[j - 1][u]];

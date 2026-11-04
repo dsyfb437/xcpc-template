@@ -26,18 +26,21 @@ struct CentroidDecomposition {
           tmp_par(n + 1), dead(n + 1, 0) {}
 
     int centroid(int entry) {
-        vector<int> order;
-        auto dfs_size = [&](auto &&self, int u, int p) -> void {
-            tmp_par[u] = p;
+        vector<int> order{entry};
+        tmp_par[entry] = 0;
+        for (int i = 0; i < (int)order.size(); i++) {
+            int u = order[i];
             sz[u] = 1;
-            order.push_back(u);
-            for (int v : g[u])
-                if (v != p && !dead[v]) {
-                    self(self, v, u);
-                    sz[u] += sz[v];
-                }
-        };
-        dfs_size(dfs_size, entry, 0);
+            for (int v : g[u]) {
+                if (v == tmp_par[u] || dead[v]) continue;
+                tmp_par[v] = u;
+                order.push_back(v);
+            }
+        }
+        for (int i = (int)order.size() - 1; i > 0; i--) {
+            int u = order[i];
+            sz[tmp_par[u]] += sz[u];
+        }
 
         int total = (int)order.size();
         for (int u : order) {
@@ -45,7 +48,7 @@ struct CentroidDecomposition {
             for (int v : g[u])
                 if (!dead[v] && tmp_par[v] == u)
                     mx = max(mx, sz[v]);
-            if (mx * 2 <= total)
+            if (mx <= total / 2)
                 return u;
         }
         return entry;

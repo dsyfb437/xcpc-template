@@ -2,7 +2,7 @@
  * @brief Entringer 数
  * @complexity O(n^2)
  * @index 三角表下标 0 到 n
- * @idea 按首项的大小分类交错排列。每行累加上一行反向的项，右端给出对应长度的交错排列总数。
+ * @idea 按首项的大小分类交错排列。每行累加上一行反向的项，第 i 行求和就是长度 i + 1 的交错排列总数。
  * @usage auto e = entringer_table(n, mod); e[i][j] 数长度 i + 1、首项为 j + 1 且先降的交错排列。
  * @pitfall mod 为正 int，可为合数。长度 1 的单元素排列算一种。
  */

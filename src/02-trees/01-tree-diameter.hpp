@@ -7,7 +7,7 @@
  *       做法：从任一点 DFS 到最远点 u，再从 u DFS 到最远点 v。
  *       无权、带权（边权非负）各一个版本；邻接表 1-indexed。 
  * @usage `auto [len, u, v] = tree_diameter(g);`
- * @pitfall 边权必须非负；负权树用树形 DP。
+ * @pitfall g 是非空连通树，路径长度要能放进返回值类型。边权必须非负，负权树用树形 DP。
  *
  * @verified
  */
@@ -23,18 +23,21 @@ using pii = pair<int, int>;
 inline pii tree_far(const vector<vector<int>> &g, int s) {
     vector<int> dist(g.size(), 0);
     int far = s, best = 0;
-    auto dfs = [&](auto &&self, int u, int p) -> void {
+    vector<pair<int, int>> stack{{s, 0}};
+    while (!stack.empty()) {
+        auto [u, p] = stack.back();
+        stack.pop_back();
         if (dist[u] > best) {
             best = dist[u];
             far = u;
         }
-        for (int v : g[u])
-            if (v != p) {
-                dist[v] = dist[u] + 1;
-                self(self, v, u);
-            }
-    };
-    dfs(dfs, s, 0);
+        for (auto it = g[u].rbegin(); it != g[u].rend(); ++it) {
+            int v = *it;
+            if (v == p) continue;
+            dist[v] = dist[u] + 1;
+            stack.emplace_back(v, u);
+        }
+    }
     return {far, best};
 }
 
@@ -48,23 +51,26 @@ inline tuple<int, int, int> tree_diameter(const vector<vector<int>> &g,
 
 // ---------- 带权（边权非负） ----------
 
-// 从 s 出发 DFS，par 顺带记父亲；返回 {最远点, 距离}
+// 从 s 出发 DFS，返回 {最远点, 距离}
 inline pair<int, ll> tree_far(const vector<vector<pair<int, ll>>> &g, int s) {
     vector<ll> dist(g.size(), 0);
     int far = s;
     ll best = 0;
-    auto dfs = [&](auto &&self, int u, int p) -> void {
+    vector<pair<int, int>> stack{{s, 0}};
+    while (!stack.empty()) {
+        auto [u, p] = stack.back();
+        stack.pop_back();
         if (dist[u] > best) {
             best = dist[u];
             far = u;
         }
-        for (auto [v, w] : g[u])
-            if (v != p) {
-                dist[v] = dist[u] + w;
-                self(self, v, u);
-            }
-    };
-    dfs(dfs, s, 0);
+        for (auto it = g[u].rbegin(); it != g[u].rend(); ++it) {
+            auto [v, w] = *it;
+            if (v == p) continue;
+            dist[v] = dist[u] + w;
+            stack.emplace_back(v, u);
+        }
+    }
     return {far, best};
 }
 

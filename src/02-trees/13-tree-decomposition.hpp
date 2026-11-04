@@ -14,24 +14,28 @@ using ll = long long;
 inline pair<vector<int>, vector<int>> tree_blocks(const vector<vector<int>> &g,
                                                   int B, int root = 1) {
     vector<int> block(g.size()), capital{0}, pending;
-    auto dfs = [&](auto &&self, int u, int parent) -> void {
-        int base = (int)pending.size();
-        for (int v : g[u]) {
-            if (v == parent)
-                continue;
-            self(self, v, u);
-            if ((int)pending.size() - base < B)
-                continue;
-            int id = (int)capital.size();
-            capital.push_back(u);
-            while ((int)pending.size() > base) {
-                block[pending.back()] = id;
-                pending.pop_back();
-            }
+    struct Frame { int u, parent, next, base; };
+    vector<Frame> stack{{root, 0, 0, 0}};
+    while (!stack.empty()) {
+        auto &frame = stack.back();
+        if (frame.next < (int)g[frame.u].size()) {
+            int v = g[frame.u][frame.next++];
+            if (v != frame.parent)
+                stack.push_back({v, frame.u, 0, (int)pending.size()});
+            continue;
         }
-        pending.push_back(u);
-    };
-    dfs(dfs, root, 0);
+        pending.push_back(frame.u);
+        stack.pop_back();
+        if (stack.empty()) break;
+        const auto &parent = stack.back();
+        if ((int)pending.size() - parent.base < B) continue;
+        int id = (int)capital.size();
+        capital.push_back(parent.u);
+        while ((int)pending.size() > parent.base) {
+            block[pending.back()] = id;
+            pending.pop_back();
+        }
+    }
     if (capital.size() == 1)
         capital.push_back(root);
     for (int u : pending)

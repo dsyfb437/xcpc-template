@@ -6,7 +6,7 @@
  * 用途：无向图的桥（删掉后连通块变多）和割点。
  * 用法：g 是 1-indexed 邻接表，元素为 {邻点, 边编号}；
  *       `Bridges br(g, m);` 之后 `br.bridge[e]`、`br.cut[v]`。
- * 递归 Tarjan；深图本地测试前先 `ulimit -s unlimited`。
+ * DFS 用显式栈，子树处理完再更新父亲的 low。
  * 平行边靠边编号区分，不会被误判成桥。
  *
  * 例：
@@ -33,24 +33,32 @@ struct Bridges {
     }
 
     void dfs(int u, int pe, const vector<vector<pair<int, int>>> &g, int &timer) {
+        struct Frame { int u, edge, next, children; };
+        vector<Frame> stack{{u, pe, 0, 0}};
         dfn[u] = low[u] = ++timer;
-        int child = 0;
-        for (auto [v, eid] : g[u]) {
-            if (eid == pe)
+        while (!stack.empty()) {
+            auto &f = stack.back();
+            if (f.next < (int)g[f.u].size()) {
+                auto [v, edge] = g[f.u][f.next++];
+                if (edge == f.edge) continue;
+                if (!dfn[v]) {
+                    f.children++;
+                    dfn[v] = low[v] = ++timer;
+                    stack.push_back({v, edge, 0, 0});
+                } else {
+                    low[f.u] = min(low[f.u], dfn[v]);
+                }
                 continue;
-            if (!dfn[v]) {
-                child++;
-                dfs(v, eid, g, timer);
-                low[u] = min(low[u], low[v]);
-                if (low[v] > dfn[u])
-                    bridge[eid] = 1;
-                if (low[v] >= dfn[u])
-                    cut[u] = 1;
-            } else {
-                low[u] = min(low[u], dfn[v]);
             }
+            auto done = f;
+            stack.pop_back();
+            if (done.edge == -1) cut[done.u] = done.children >= 2;
+            if (stack.empty()) continue;
+            int parent = stack.back().u;
+            low[parent] = min(low[parent], low[done.u]);
+            if (low[done.u] > dfn[parent]) bridge[done.edge] = 1;
+            if (low[done.u] >= dfn[parent]) cut[parent] = 1;
         }
-        if (pe == -1)
-            cut[u] = child >= 2;
     }
+
 };

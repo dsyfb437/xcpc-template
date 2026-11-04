@@ -4,7 +4,7 @@
  * @index 点 0-based
  * @idea 固定剩余点中编号最小的 u，枚举跳过 u 或让 u 与一个剩余邻点配对。
  * @usage auto [weight, mate] = weighted_matching(w); mate[u] 为配对点，-1 表示未匹配。
- * @pitfall 适合 n <= 22。w 为对称矩阵，缺边填 0，非正权边可跳过，匹配可以为空。
+ * @pitfall 适合 n <= 22。w 为对称矩阵，缺边填 0，非正权边可跳过，匹配可以为空。最大总权值须放进 long long。
  */
 #pragma once
 #include <bits/stdc++.h>

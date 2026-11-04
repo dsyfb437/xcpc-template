@@ -1,11 +1,11 @@
 /**
  * @brief Dijkstra（堆优化）
- * @complexity O((n + m) log n)
+ * @complexity O(n + m log(2 + m))
  * @index 点 1-based
  *
  * @idea 邻接表 g 从 1 开始存，(终点, 边权)。不可达返回 INF。
  * @usage 例：`vector<ll> d = dijkstra(g, s);  // 不可达是 INF`
- * @pitfall 只适用于非负边权；有负边换 SPFA 或 Johnson。
+ * @pitfall 边权非负。有限答案须小于 INF，更大的距离统一返回 INF。边权本身可以很大，松弛前会先判断是否超限。
  * 
  * @verified
  *  */
@@ -28,6 +28,8 @@ vector<ll> dijkstra(const vector<vector<pair<int, ll>>> &g, int s) {
         if (du != d[u])
             continue; // 跳过过期堆项
         for (auto [v, w] : g[u]) {
+            if (w >= INF - du)
+                continue;
             if (d[v] > du + w) {
                 d[v] = du + w;
                 pq.push({d[v], v});

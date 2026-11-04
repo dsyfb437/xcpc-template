@@ -55,10 +55,21 @@ inline ld circle_overlap(Circle a, Circle b) {
     if (d <= abs(r - s))
         return acos(-1.L) * min(r, s) * min(r, s);
 
-    ld x = clamp((d * d + (r - s) * (r + s)) / (2 * d * r), -1.L, 1.L);
-    ld y = clamp((d * d + (s - r) * (s + r)) / (2 * d * s), -1.L, 1.L);
-    return r * r * (acos(x) - x * sqrt(1 - x * x)) +
-           s * s * (acos(y) - y * sqrt(1 - y * y));
+    ld sum = r + s, diff = r - s;
+    // 由三边长求半弦长，保留接近外切时很小的 sum-d。
+    ld h = sqrt(sum - d) * (sqrt(sum + d) / 2) *
+           sqrt(max(0.L, ((d + diff) / d) * ((d - diff) / d)));
+    ld along = d / 2 + (diff / d) * (sum / 2);
+    auto segment = [](ld angle) {
+        // angle-sin(angle)*cos(angle) 在小角度时会严重相消。
+        if (angle < 1e-3L) {
+            ld z = angle * angle;
+            return angle * z * (2.L / 3 - z * (2.L / 15 - z * 4.L / 315));
+        }
+        return angle - sin(angle) * cos(angle);
+    };
+    return r * (r * segment(atan2(h, along))) +
+           s * (s * segment(atan2(h, d - along)));
 }
 
 struct CircleTangent {

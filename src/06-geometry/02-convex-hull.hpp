@@ -2,32 +2,35 @@
  * @brief 凸包（Andrew）
  * @complexity O(n log n)
  * @index vector 0-based
- *
- * 返回逆时针凸包，不含重复的起点，共线点只保留端点。
- * 点数 <= 2 时原样返回；需要保留边上点就把 <= 0 改成 < 0。
- *
- * 例：
- *   vector<Point> h = convex_hull(p);  // p 会被排序、去重 */
+ * @idea 先排序去重，分别扫出下凸壳和上凸壳。返回逆时针顶点，不重复起点。
+ * @usage auto h = convex_hull(p); 函数会排序自己的副本，原数组 p 不变。
+ * @pitfall 坐标绝对值不超过 10^12，叉积用 __int128。共线中间点会被删掉；全部共线时只留两端。
+ */
 #pragma once
 #include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
 struct Point {
+    using Wide = __int128;
     ll x, y;
 
     Point operator+(const Point &o) const { return {x + o.x, y + o.y}; }
     Point operator-(const Point &o) const { return {x - o.x, y - o.y}; }
     Point operator*(ll k) const { return {x * k, y * k}; }
 
-    ll operator*(const Point &o) const { return x * o.x + y * o.y; } // 点积
-    ll operator^(const Point &o) const { return x * o.y - y * o.x; } // 叉积
+    Wide operator*(const Point &o) const {
+        return Wide(x) * o.x + Wide(y) * o.y;
+    } // 点积
+    Wide operator^(const Point &o) const {
+        return Wide(x) * o.y - Wide(y) * o.x;
+    } // 叉积
 
     bool operator<(const Point &o) const { return x != o.x ? x < o.x : y < o.y; }
     bool operator==(const Point &o) const { return x == o.x && y == o.y; }
 
-    ll norm2() const { return x * x + y * y; }
+    Wide norm2() const { return Wide(x) * x + Wide(y) * y; }
 
-    ll turn(const Point &a, const Point &b) const {
+    Wide turn(const Point &a, const Point &b) const {
         return (a - *this) ^ (b - *this);
     }
 };

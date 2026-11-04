@@ -39,7 +39,11 @@ inline vector<ll> mobius_invert(const vector<ll> &sum) {
     vector<ll> f(n + 1);
     for (int d = 1; d <= n; d++)
         if (mu[d])
-            for (int k = 1; k <= n / d; k++)
-                f[d * k] += mu[d] * sum[k];
+            for (int k = 1; k <= n / d; k++) {
+                if (mu[d] == 1)
+                    f[d * k] += sum[k];
+                else
+                    f[d * k] -= sum[k];
+            }
     return f;
 }

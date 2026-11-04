@@ -39,8 +39,13 @@ inline vector<HpiPoint> half_plane_intersection(vector<HalfPlane> planes, ld bou
             cross(b.point - a.point, b.direction) / cross(a.direction, b.direction);
         return a.point + a.direction * t;
     };
-    for (auto &h : planes)
-        h.direction = h.direction * (1 / hypot(h.direction.x, h.direction.y));
+    for (auto &h : planes) {
+        // 先缩放再单位化，避免极大方向的长度或极小长度的倒数溢出。
+        ld scale = max(abs(h.direction.x), abs(h.direction.y));
+        h.direction = {h.direction.x / scale, h.direction.y / scale};
+        ld len = hypot(h.direction.x, h.direction.y);
+        h.direction = {h.direction.x / len, h.direction.y / len};
+    }
     auto angle = [](HalfPlane h) {
         ld a = atan2(h.direction.y, h.direction.x);
         return a < 0 ? a + 2 * acos(-1.L) : a;
